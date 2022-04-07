@@ -31,7 +31,7 @@ public class Player : MonoBehaviour
     {
         inputX = Input.GetAxis("Horizontal");
         inputY = Input.GetAxis("Vertical");
-        moveInput = new Vector2(inputX, inputY);
+        moveInput = new Vector2(inputX, inputY*2);
 
         openRarar = Input.GetKeyDown(KeyCode.F);
     }

@@ -24,7 +24,7 @@ public class ObjectPool
             {
                 pool = new GameObject("ObjectPool");
             }
-            GameObject childPool =GameObject.Find(_name);  //寻找子池
+            GameObject childPool =GameObject.Find(_name);               //寻找子池
             if (!childPool)                                             //如果不存在对应物体的子池则创建子池并将父子池绑定父子关系
             {
                 childPool = new GameObject(_name);
