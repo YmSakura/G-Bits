@@ -15,8 +15,9 @@ public class Enemies : MonoBehaviour
     public Vector2 direction;       //自身朝向
 
     [Header("Component")] 
-    [SerializeField]private Transform alertAreaPointA;      //矩形警戒区域对角线一段
+    [SerializeField]private Transform alertAreaPointA;      //矩形警戒(仇恨)区域对角线一段
     [SerializeField]private Transform alertAreaPointB;      //矩形警戒区域对角线另一段
+    //[SerializeField]private Transform alertAreaPointC;      //矩形仇恨区域对角线另一段
     [SerializeField]protected Transform playerTrans;          //玩家坐标
 
     [SerializeField]private LayerMask playerMask;       //Player层包括玩家(所有可以被看见的)(用于判断)
@@ -29,7 +30,7 @@ public class Enemies : MonoBehaviour
     
     [SerializeField] private Slider alertBar;
     [SerializeField] private Image alertFill;
-    protected float distance;
+    protected float Distance;
 
 
     //private float alertMuliplier = 10f;
@@ -59,7 +60,7 @@ public class Enemies : MonoBehaviour
     /// 敌方目标是否能够看见玩家（玩家处于警戒范围内并且无墙体物品阻挡）
     /// </summary>
     /// <returns>distance</returns>
-    private float AlertCheck()
+    private int AlertCheck()
     {
         position = transform.position;                              //确定自身坐标
         direction = (Vector2)playerTrans.position - position;              //计算看向玩家的方向
@@ -73,7 +74,7 @@ public class Enemies : MonoBehaviour
             return distance;
         }
 
-        return -1f;
+        return -1;
     }
 
     /// <summary>
@@ -85,22 +86,19 @@ public class Enemies : MonoBehaviour
             isInAlertArea = IsInAlertArea();
         if (isInAlertArea)                          //如果在警戒区域内
         {
-            distance = AlertCheck();                                                //战斗中但是不在警戒区域内是否需要检测
-            if (distance >= 0 && !inCombat)         //敌方目标还不在战斗状态中并且看到了玩家则警戒值上升
+            Distance = AlertCheck();                                                //战斗中但是不在警戒区域内是否需要检测
+            if (Distance >= 0 && !inCombat)         //敌方目标还不在战斗状态中并且看到了玩家则警戒值上升
             {
 
                 if (alertValue < 100)               //警戒值小于100则不断提升警戒值
-                    if (distance <= 2) 
-                        alertValue += 5;
-                    else 
-                        alertValue += 1f;
+                    alertValue += (Distance <= 2 ? 5 : 1);
                 else //警戒值大于100则进入战斗状态
                 {
                     inCombat = true;
                     GroupEnmity();
                 }
             }
-            else if(distance < 0)
+            else if(Distance < 0)
             {
                 if (alertValue > 0)
                     alertValue -= 1;                //如果还在警戒区域内但是视线被阻挡了则警戒值
@@ -144,7 +142,9 @@ public class Enemies : MonoBehaviour
                 coll.gameObject.GetComponent<Enemies>().inCombat = true;
         }
     }
+
     
 
-
+    
 }
+
