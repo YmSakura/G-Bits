@@ -1,44 +1,171 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class Player : MonoBehaviour
+
+public class Player : GameActor
 {
-    private float inputX, inputY;
-    private Vector2 moveInput;
-    private float moveSpeed = 5.0f;
-    private bool openRarar;
+    [Header("自身组件")]
+    private Rigidbody2D rb;
+    private Animator animator;
+    private Collider2D collider2D;
     
-    // Start is called before the first frame update
-    void Start()
+    
+    [Header("移动/跳跃参数")]
+    private float faceDirection;
+    [SerializeField] private float moveSpeed;
+    [SerializeField] private float jumpForce;
+    [SerializeField] private LayerMask groundLayer;
+
+
+    [Header("Animator参数")] 
+    private String speed = "speed",
+        jumping = "jumping",
+        falling = "falling",
+        isIdle = "isIdle",
+        isWalk = "isWalk";
+    
+    
+    
+
+    private int maxHp = 100;
+    private int hp;
+    private int attack = 1;
+    
+    
+    public ICommand playerCommand;
+    public Weapon weapon;
+
+
+    private void Awake()
     {
+        rb = GetComponent<Rigidbody2D>();
+        animator = GetComponent<Animator>();
+        collider2D = GetComponent<Collider2D>();
+        //默认武器为匕首
+        weapon = GetComponent<Dagger>();
+        GetComponent<Attacked>().OnGetHit += OnGetHurt;
         
+        //初始化人物参数
+        //moveSpeed = 100.0f;
+        //jumpForce = 150.0f;
+        hp = maxHp;
     }
 
-    // Update is called once per frame
+    
     private void Update()
     {
         GetInput();
-        Movement();
+        UpdateCommand();
+        UpdateStatus();
     }
-
-    private void Movement()
+    private void FixedUpdate()
     {
-        transform.Translate(moveInput * moveSpeed * Time.deltaTime, Space.World);
+        Move();
     }
-
+    
+    /// <summary>
+    /// 获取移动所需输入
+    /// </summary>
     private void GetInput()
     {
-        inputX = Input.GetAxis("Horizontal");
-        inputY = Input.GetAxis("Vertical");
-        moveInput = new Vector2(inputX, inputY*2);
-
-        openRarar = Input.GetKeyDown(KeyCode.F);
+        //inputX = Input.GetAxis("Horizontal");
+        faceDirection = Input.GetAxisRaw("Horizontal");
+        //Debug.Log(faceDirection);
+    }
+    private void UpdateCommand()
+    {
+        playerCommand?.Execute(this);
+    }
+    /// <summary>
+    /// 更新Animator参数
+    /// </summary>
+    private void UpdateStatus()
+    {
+        animator.SetFloat(speed, Math.Abs(faceDirection));
+        animator.SetBool(isIdle, faceDirection==0);
+        animator.SetBool(isWalk, faceDirection>0);
+        
+        if (animator.GetBool(jumping))
+        {
+            if(rb.velocity.y < 0)
+            {
+                animator.SetBool(jumping, false);
+                animator.SetBool(falling, true);
+            }
+        }
+        if (animator.GetBool(falling))
+        {
+            if(collider2D.IsTouchingLayers(groundLayer))
+            {
+                animator.SetBool(falling, false);
+            }
+        }
     }
 
-    private void OpenRadar()
+
+    private void isOnGround()
     {
         
+    }
+
+    /// <summary>
+    /// 移动函数
+    /// </summary>
+    private void Move()
+    {
+        if (faceDirection != 0)
+        {
+            //具体的移动
+            rb.velocity = new Vector2(faceDirection * moveSpeed * Time.fixedDeltaTime, rb.velocity.y);
+            //控制转向
+            transform.localScale = new Vector3(faceDirection * 0.1f, 0.1f, 1);
+        }
+    }
+
+    /// <summary>
+    /// 跳跃函数
+    /// </summary>
+    public override void Jump()
+    {
+        if (collider2D.IsTouchingLayers(groundLayer))
+        {
+            rb.velocity = new Vector2(rb.velocity.x, jumpForce * Time.fixedDeltaTime);
+            animator.SetBool(jumping, true);
+        }
+    }
+
+    
+    public override void Attack()
+    {
+        animator.Play("knife_attack1");
+        Debug.Log("Player普通攻击");
+    }
+
+    private void OnGetHurt(Vector2 position,Vector2 force,int damage)
+    {
+        hp -= damage;
+        Debug.Log("Player被攻击");
+    }
+
+    public override void SwitchWeapon()
+    {
+        if (weapon is Dagger)
+        {
+            weapon = GetComponent<Scythe>();
+            Debug.Log("武器切换为镰刀");
+        }
+        else if (weapon is Scythe)
+        {
+            weapon = GetComponent<Gun>();
+            Debug.Log("武器切换为枪");
+        }
+        else if (weapon is Gun)
+        {
+            weapon = GetComponent<Dagger>();
+            Debug.Log("武器切换为匕首");
+        }
     }
     
 }
