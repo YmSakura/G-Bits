@@ -12,6 +12,7 @@ public class InputHandler : MonoBehaviour
     private ICommand buttonK;
     private ICommand buttonL;
     private ICommand buttonQ;
+    private ICommand buttonE;
     private ICommand buttonSpace;
    
     [Header("可被控制的游戏角色")]
@@ -21,7 +22,8 @@ public class InputHandler : MonoBehaviour
     {
         buttonSpace = new JumpCommand();
         buttonJ = new AttackCommand();
-        buttonQ = new SwitchCommand();
+        buttonQ = new SwitchWeaponCommand();
+        buttonE = new SwitchStatusCommand();
     }
 
     
@@ -29,6 +31,7 @@ public class InputHandler : MonoBehaviour
     {
         //每一帧更新命令
         player.playerCommand = HandleInput();
+        
     }
 
     /// <summary>
@@ -37,11 +40,12 @@ public class InputHandler : MonoBehaviour
     /// <returns>相应命令</returns>
     public ICommand HandleInput()
     {
-        if (Input.GetKeyDown(KeyCode.J)) return buttonJ;
+        if (Input.GetKeyDown(KeyCode.J)) return buttonJ;//普通攻击
         if (Input.GetKeyDown(KeyCode.K)) return buttonK;
         if (Input.GetKeyDown(KeyCode.L)) return buttonL;
-        if (Input.GetKeyDown(KeyCode.Q)) return buttonQ;
-        if (Input.GetKeyDown(KeyCode.Space)) return buttonSpace;
+        if (Input.GetKeyDown(KeyCode.Q)) return buttonQ;//切换武器
+        if (Input.GetKeyDown(KeyCode.E)) return buttonE;//切换形态
+        if (Input.GetKeyDown(KeyCode.Space)) return buttonSpace;//跳跃
         
         //没输入就返回null
         return null;

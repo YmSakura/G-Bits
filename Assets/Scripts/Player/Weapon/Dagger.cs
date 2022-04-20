@@ -5,38 +5,44 @@ using UnityEngine;
 
 public class Dagger : Weapon
 {
+    public Collider2D knifeL, knifeR;
+    
     private void Awake()
     {
-        basicAttackFirst = 10.0f;
-        basicAttackSecond = 10.0f;
-        basicAttackThird = 15.0f;
-        basicAttackDistance = 1.0f;
+        knifeL.enabled = false;
+        knifeR.enabled = false;
         
-        jumpAttack = 10.0f;
-        jumpAttackDistance = 1.0f;
+        basicAttackFirst = 10;
+        basicAttackSecond = 10;
+        basicAttackThird = 15;
+        basicAttackDistance = 1;
         
-        upwardAttack = 10.0f;
-        upwardAttackDistance = 1.0f;
+        jumpAttack = 10;
+        jumpAttackDistance = 1;
         
-    }
-
-    public override void BasicAttack()
-    {
+        upwardAttack = 10;
+        upwardAttackDistance = 1;
         
     }
 
-    public override void JumpAttack()
+    public void OpenCollider()
     {
-        
+        knifeL.enabled = true;
+        knifeR.enabled = true;
     }
 
-    public override void UpwardAttack()
+    public void CloseCollider()
     {
-        
+        knifeL.enabled = false;
+        knifeR.enabled = false;
     }
-
-    private void Update()
+    
+    private void OnCollisionEnter2D(Collision2D other)
     {
-        //Debug.Log("Update:Dagger.basicAttackFirst:" + basicAttackFirst);
+        if (other.gameObject.CompareTag("Enemies"))
+        {
+            other.gameObject.GetComponent<Attacked>()
+                .OnGetHurt(other.transform.position, Vector2.zero, basicAttackFirst);
+        }
     }
 }

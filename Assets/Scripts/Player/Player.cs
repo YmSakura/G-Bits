@@ -3,41 +3,45 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-
 public class Player : GameActor
 {
     [Header("自身组件")]
     private Rigidbody2D rb;
     private Animator animator;
     private Collider2D collider2D;
+    public Weapon weapon;
     
     
     [Header("移动/跳跃参数")]
     private float faceDirection;
     [SerializeField] private float moveSpeed;
     [SerializeField] private float jumpForce;
+    [SerializeField] private float sprintSpeed;
     [SerializeField] private LayerMask groundLayer;
 
 
-    [Header("Animator参数")] 
-    private String speed = "speed",
+    [Header("Animator参数")] private String speed = "speed",
         jumping = "jumping",
         falling = "falling",
         isIdle = "isIdle",
-        isWalk = "isWalk";
+        isWalk = "isWalk",
+        canSprint = "canSprint";
     
     
-    
-
+    [Header("人物属性")]
     private int maxHp = 100;
     private int hp;
     private int attack = 1;
-    
+
+    [Header("蓄力设置")] 
+    [SerializeField] private float chargeMaxTime = 1.0f;
+    [SerializeField] private float chargeMinTime = 0.1f;
+    [SerializeField] private float chargeTime;//蓄力时间
+    [SerializeField] private bool chargeDone;//蓄力完成
+    [SerializeField] private bool charging;//是否在蓄力中
     
     public ICommand playerCommand;
-    public Weapon weapon;
-
-
+    
     private void Awake()
     {
         rb = GetComponent<Rigidbody2D>();
@@ -45,20 +49,17 @@ public class Player : GameActor
         collider2D = GetComponent<Collider2D>();
         //默认武器为匕首
         weapon = GetComponent<Dagger>();
+        //添加受击函数
         GetComponent<Attacked>().OnGetHit += OnGetHurt;
-        
-        //初始化人物参数
-        //moveSpeed = 100.0f;
-        //jumpForce = 150.0f;
+        //初始化人物属性
         hp = maxHp;
     }
-
     
     private void Update()
     {
         GetInput();
         UpdateCommand();
-        UpdateStatus();
+        UpdateAnimator();
     }
     private void FixedUpdate()
     {
@@ -72,8 +73,10 @@ public class Player : GameActor
     {
         //inputX = Input.GetAxis("Horizontal");
         faceDirection = Input.GetAxisRaw("Horizontal");
-        //Debug.Log(faceDirection);
+        charging = Input.GetKey(KeyCode.F);
+        
     }
+    
     private void UpdateCommand()
     {
         playerCommand?.Execute(this);
@@ -81,7 +84,7 @@ public class Player : GameActor
     /// <summary>
     /// 更新Animator参数
     /// </summary>
-    private void UpdateStatus()
+    private void UpdateAnimator()
     {
         animator.SetFloat(speed, Math.Abs(faceDirection));
         animator.SetBool(isIdle, faceDirection==0);
@@ -102,6 +105,8 @@ public class Player : GameActor
                 animator.SetBool(falling, false);
             }
         }
+        
+        
     }
 
 
@@ -119,8 +124,8 @@ public class Player : GameActor
         {
             //具体的移动
             rb.velocity = new Vector2(faceDirection * moveSpeed * Time.fixedDeltaTime, rb.velocity.y);
-            //控制转向
-            transform.localScale = new Vector3(faceDirection * 0.1f, 0.1f, 1);
+            //人物转向
+            transform.localScale = new Vector3(faceDirection * 0.1f, 0.1f, 0.1f);
         }
     }
 
@@ -131,7 +136,7 @@ public class Player : GameActor
     {
         if (collider2D.IsTouchingLayers(groundLayer))
         {
-            rb.velocity = new Vector2(rb.velocity.x, jumpForce * Time.fixedDeltaTime);
+            rb.velocity = new Vector2(rb.velocity.x, jumpForce);
             animator.SetBool(jumping, true);
         }
     }
@@ -141,6 +146,33 @@ public class Player : GameActor
     {
         animator.Play("knife_attack1");
         Debug.Log("Player普通攻击");
+    }
+
+    private void SetCharge(bool charging, float deltaTime)
+    {
+        if (charging)
+        {
+            
+        }
+        else
+        {
+            
+        }
+    }
+
+    public void Sprint()
+    {
+        animator.Play("knife_sprint");
+        Debug.Log("Player进入蓄力状态");
+    }
+
+    /// <summary>
+    /// 作为动画事件，蓄力结束时调用
+    /// </summary>
+    public void CanSprint()
+    {
+        animator.SetTrigger(canSprint);
+        transform.position += transform.position * sprintSpeed;
     }
 
     private void OnGetHurt(Vector2 position,Vector2 force,int damage)

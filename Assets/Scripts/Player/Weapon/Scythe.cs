@@ -6,16 +6,16 @@ public class Scythe : Weapon
 {
     private void Awake()
     {
-        basicAttackFirst = 20.0f;
-        basicAttackSecond = 15.0f;
-        basicAttackThird = 25.0f;
-        basicAttackDistance = 2.0f;
+        basicAttackFirst = 20;
+        basicAttackSecond = 15;
+        basicAttackThird = 25;
+        basicAttackDistance = 2;
         
-        jumpAttack = 25.0f;
-        jumpAttackDistance = 2.0f;
+        jumpAttack = 25;
+        jumpAttackDistance = 2;
         
-        upwardAttack = 25.0f;
-        upwardAttackDistance = 2.5f;
+        upwardAttack = 25;
+        upwardAttackDistance = 2;
         
     }
     

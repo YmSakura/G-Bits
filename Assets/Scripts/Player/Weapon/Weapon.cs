@@ -5,23 +5,16 @@ using UnityEngine;
 public class Weapon : MonoBehaviour
 {
     [Header("普通攻击")] 
-    protected float basicAttackFirst;
-    protected float basicAttackSecond;
-    protected float basicAttackThird;
-    protected float basicAttackDistance;
+    protected int basicAttackFirst;
+    protected int basicAttackSecond;
+    protected int basicAttackThird;
+    protected int basicAttackDistance;
     [Header("跳跃攻击")]
-    protected float jumpAttack;
-    protected float jumpAttackDistance;
+    protected int jumpAttack;
+    protected int jumpAttackDistance;
     [Header("向上攻击")]
-    protected float upwardAttack;
-    protected float upwardAttackDistance;
-    
-    public virtual void BasicAttack(){}
-
-    public virtual void JumpAttack(){}
-
-    public virtual void UpwardAttack(){}
-    
+    protected int upwardAttack;
+    protected int upwardAttackDistance;
     
     
 }
