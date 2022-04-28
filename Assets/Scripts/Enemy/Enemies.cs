@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
-public class Enemies : MonoBehaviour
+public class Enemies : Subject
 {
     [Header("基本属性")] 
     public float healthValue;       //生命值
@@ -13,6 +13,11 @@ public class Enemies : MonoBehaviour
     public float alertValue;        //警戒值
     public Vector2 position;        //自身坐标
     public Vector2 direction;       //自身朝向
+    
+    [Header("技能属性")]
+    protected bool InSkill = false;
+    protected bool Movable = true;
+    protected bool Attackable = true;
 
     [Header("Component")] 
     [SerializeField]private Transform alertAreaPointA;      //矩形警戒(仇恨)区域对角线一段
@@ -23,9 +28,9 @@ public class Enemies : MonoBehaviour
     [SerializeField]private LayerMask playerMask;       //Player层包括玩家(所有可以被看见的)(用于判断)
     [SerializeField]private LayerMask visibleMask;      //Visible层包括墙体(所有可以被看见的,会被阻挡视线的)(用于判断)
     [SerializeField]private LayerMask enemyMask;        //Enemy层包括所有敌人(用于范围唤醒敌人进入战斗状态)
-    private ContactFilter2D playerFilter2D;             //用于筛选出Player层的对象
+    protected ContactFilter2D PlayerFilter2D;             //用于筛选出Player层的对象
     private ContactFilter2D enemyFilter2D;              //用于筛选出Enemy层的对象
-    private readonly Collider2D[] _result = new Collider2D[1];          //overlap获取到的玩家碰撞体
+    protected readonly Collider2D[] PlayerColl = new Collider2D[1];          //overlap获取到的玩家碰撞体
     private readonly Collider2D[] _enemyColls = new Collider2D[8];      //overlap获取到的周边敌方目标碰撞体
     
     [SerializeField] private Slider alertBar;
@@ -37,10 +42,11 @@ public class Enemies : MonoBehaviour
 
     protected void BaseInit()
     {
-        playerFilter2D.layerMask = playerMask;
+        PlayerFilter2D.layerMask = playerMask;
         enemyFilter2D.layerMask = enemyMask;
-        playerFilter2D.useLayerMask = true;
+        PlayerFilter2D.useLayerMask = true;
         enemyFilter2D.useLayerMask = true;
+        gameObject.GetComponent<Attacked>().OnGetHit += GetHit;
         Debug.Log("加载");
     }
 
@@ -50,10 +56,10 @@ public class Enemies : MonoBehaviour
     /// <returns>玩家是否处于警戒区域内的布尔值,在->真;不在->假</returns>
     private bool IsInAlertArea()
     {
-        _result[0] = null;
-        Physics2D.OverlapArea(alertAreaPointA.position, alertAreaPointB.position, playerFilter2D,
-            _result); //以AB两点画矩形警戒区域,并筛选出其中的Player层的object(即玩家),存入_result数组中
-        return _result[0]; //_result数组中有对象 则代表 警戒区域内有玩家 返回真,无则假
+        PlayerColl[0] = null;
+        Physics2D.OverlapArea(alertAreaPointA.position, alertAreaPointB.position, PlayerFilter2D,
+            PlayerColl); //以AB两点画矩形警戒区域,并筛选出其中的Player层的object(即玩家),存入_result数组中
+        return PlayerColl[0]; //_result数组中有对象 则代表 警戒区域内有玩家 返回真,无则假
     }
 
     /// <summary>
@@ -86,6 +92,11 @@ public class Enemies : MonoBehaviour
             isInAlertArea = IsInAlertArea();
         if (isInAlertArea)                          //如果在警戒区域内
         {
+            if (inCombat)
+            {
+                alertValue = 100;
+                return;
+            }
             Distance = AlertCheck();                                                //战斗中但是不在警戒区域内是否需要检测
             if (Distance >= 0 && !inCombat)         //敌方目标还不在战斗状态中并且看到了玩家则警戒值上升
             {
@@ -144,7 +155,26 @@ public class Enemies : MonoBehaviour
     }
 
     
-
+    /// <summary>
+    /// 重置攻击CD
+    /// </summary>
+    /// <returns></returns>
+    protected IEnumerator ResetAttackCd(float attackCd)
+    {
+        Debug.Log("重置状态");
+        InSkill = false;
+        Movable = true;                                //可以继续移动
+        yield return new WaitForSeconds(attackCd);      //等待攻击CD
+        Attackable = true;                              //CD过后重新可以继续攻击
+        Debug.Log("重置结束");
+    }
+    
+    protected void GetHit(Vector2 position, Vector2 force,int damage)
+    {
+        healthValue-= damage;
+        inCombat = true;
+        alertValue = 100;
+    }
     
 }
 
