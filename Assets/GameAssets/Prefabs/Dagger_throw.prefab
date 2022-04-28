@@ -11,8 +11,10 @@ GameObject:
   - component: {fileID: 1125689369690792043}
   - component: {fileID: 1577692321624726697}
   - component: {fileID: 5666496057741576355}
+  - component: {fileID: 2023210013693024008}
+  - component: {fileID: -3870210728934229766}
   m_Layer: 0
-  m_Name: Circle
+  m_Name: Dagger_throw
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -104,3 +106,45 @@ Rigidbody2D:
   m_SleepingMode: 1
   m_CollisionDetection: 0
   m_Constraints: 4
+--- !u!61 &2023210013693024008
+BoxCollider2D:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8877224828519593669}
+  m_Enabled: 1
+  m_Density: 1
+  m_Material: {fileID: 0}
+  m_IsTrigger: 0
+  m_UsedByEffector: 0
+  m_UsedByComposite: 0
+  m_Offset: {x: 0.078086734, y: -0.23095584}
+  m_SpriteTilingProperty:
+    border: {x: 0, y: 0, z: 0, w: 0}
+    pivot: {x: 0.5, y: 0.5}
+    oldSize: {x: 4.09, y: 1.13}
+    newSize: {x: 1, y: 1}
+    adaptiveTilingThreshold: 0.5
+    drawMode: 0
+    adaptiveTiling: 0
+  m_AutoTiling: 0
+  serializedVersion: 2
+  m_Size: {x: 4.246174, y: 1.0428467}
+  m_EdgeRadius: 0
+--- !u!114 &-3870210728934229766
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8877224828519593669}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 280de31725b361e40bdcfb1f4b962b4f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  damage: 0
+  force: {x: 0, y: 0}
+  sprite: {fileID: 1577692321624726697}
+  rb: {fileID: 5666496057741576355}
