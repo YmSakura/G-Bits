@@ -7,7 +7,7 @@ using UnityEngine;
 /// <summary>
 /// 丢出的匕首
 /// </summary>
-public class JaculatoryDagger : TriggerAttack
+public class JaculatoryDagger : CollisionAttack
 {
     [SerializeField] private SpriteRenderer sprite;
     [SerializeField] private Rigidbody2D rb;
@@ -23,10 +23,11 @@ public class JaculatoryDagger : TriggerAttack
     /// 进行碰撞判定，如果是碰到玩家则给于伤害，如果是碰到墙则消失
     /// </summary>
     /// <param name="col"></param>
-    private void Function1(Collider2D col)
+    private void Function1(Collision col)
     {
         if (col.gameObject.CompareTag("Player"))
         {
+            rb.velocity=Vector2.zero;
             col.gameObject.GetComponent<Attacked>().OnGetHurt(transform.position,force, damage);
             StartCoroutine(DaggerFade());
         }
