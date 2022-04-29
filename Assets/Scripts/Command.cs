@@ -36,3 +36,11 @@ public class SwitchStatusCommand : ICommand
         gameActor.SwitchStatus();
     }
 }
+
+public class SprintCommand : ICommand
+{
+    public void Execute(GameActor gameActor)
+    {
+        gameActor.Sprint();
+    }
+}
