@@ -14,12 +14,14 @@ public class InputHandler : MonoBehaviour
     private ICommand buttonQ;
     private ICommand buttonE;
     private ICommand buttonF;
-
+    private ICommand buttonSpace;
+   
     [Header("可被控制的游戏角色")]
     public Player player;
     
     private void Awake()
     {
+        buttonSpace = new JumpCommand();
         buttonJ = new AttackCommand();
         buttonQ = new SwitchWeaponCommand();
         buttonE = new SwitchStatusCommand();
@@ -45,7 +47,8 @@ public class InputHandler : MonoBehaviour
         if (Input.GetKeyDown(KeyCode.F)) return buttonF;//冲刺攻击
         if (Input.GetKeyDown(KeyCode.Q)) return buttonQ;//切换武器
         if (Input.GetKeyDown(KeyCode.E)) return buttonE;//切换形态
-
+        if (Input.GetKeyDown(KeyCode.Space)) return buttonSpace;//跳跃
+        
         //没输入就返回null
         return null;
     }
