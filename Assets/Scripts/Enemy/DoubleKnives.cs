@@ -56,7 +56,7 @@ public class DoubleKnives : Enemies ,IObserver
         healthValue = 100;
         rb = GetComponent<Rigidbody2D>();
         anim = GetComponent<Animator>();
-        SprintAttackArea.GetComponentInChildren<TriggerAttack>().damage = 20;
+        SprintAttackArea.GetComponentInChildren<CollisionAttack>().damage = 20;
         DaggerAttackArea.GetComponentInChildren<JaculatoryDagger>().damage = 10;
         SlashAttackArea.GetComponentInChildren<TriggerAttack>().damage = 10;
         SprintAttackArea.GetComponent<BoxCollider2D>().enabled = false;
@@ -238,11 +238,11 @@ public class DoubleKnives : Enemies ,IObserver
     /// </summary>
     private IEnumerator ThrowDagger()
     {
-        Vector2 pos = transform.position + new Vector3(-faceDirection * 5, 2, 0);
+        Vector2 pos = transform.position + new Vector3(0, +0.5f, 0);
         for (int i = 0; i < 3; i++)
         {
             StartCoroutine(DaggerGenerate(i,pos));
-            pos -= new Vector2(0, 1);
+            pos -= new Vector2(0, 0.6f);
             yield return new WaitForSeconds(DaggerInterval);
         }
     }

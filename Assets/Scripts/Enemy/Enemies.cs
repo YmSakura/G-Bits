@@ -24,7 +24,7 @@ public class Enemies : Subject
     [SerializeField]private Transform alertAreaPointB;      //矩形警戒区域对角线另一段
     //[SerializeField]private Transform alertAreaPointC;      //矩形仇恨区域对角线另一段
     [SerializeField]protected Transform playerTrans;          //玩家坐标
-
+    [SerializeField] private GameObject BackAttackArea;
     [SerializeField]private LayerMask playerMask;       //Player层包括玩家(所有可以被看见的)(用于判断)
     [SerializeField]private LayerMask visibleMask;      //Visible层包括墙体(所有可以被看见的,会被阻挡视线的)(用于判断)
     [SerializeField]private LayerMask enemyMask;        //Enemy层包括所有敌人(用于范围唤醒敌人进入战斗状态)
@@ -132,10 +132,12 @@ public class Enemies : Subject
             alertBar.value = alertValue;
             alertFill.color = new Color(alertBar.value / 100, 0, 0, 1);
         }
-        
-        if (alertValue < 0.1 && inCombat)           //如果警戒值归0则从战斗状态中退出
+
+        if (alertValue < 0.1 && inCombat) //如果警戒值归0则从战斗状态中退出
+        {
             inCombat = false;
-        
+            BackAttackArea.SetActive(true);
+        }
     }
     
     
