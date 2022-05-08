@@ -15,7 +15,7 @@ enum Skill
     SDaggerThrow,
     SSlashAttack
 }
-public class DoubleKnives : Enemies ,IObserver
+public class DoubleKnives : Enemies
 {
     [Header("基本属性")] 
     private int faceDirection = 1;
@@ -28,13 +28,13 @@ public class DoubleKnives : Enemies ,IObserver
     [SerializeField] private GameObject daggerPrefab;
     [SerializeField] private GameObject[] daggers = new GameObject[3];
     [SerializeField] private Animator anim;
-    [SerializeField] private Transform patrolAreaPointL;
-    [SerializeField] private Transform patrolAreaPointR;
     [SerializeField] private GameObject SprintAttackArea;
     [SerializeField] private GameObject DaggerAttackArea;
     [SerializeField] private GameObject SlashAttackArea;
 
     [Header("技能属性")]
+    private Vector3 patrolAreaPointL;
+    private Vector3 patrolAreaPointR;
     private Coroutine CdReset;
     private Skill skill;
 
@@ -43,11 +43,10 @@ public class DoubleKnives : Enemies ,IObserver
     private const float SprintSpeed = 5f;           //冲刺速度
     private const float DaggerSpeed = 16;           //匕首飞行速度
     private const float DaggerInterval = 0.2f;           //匕首间隔
-    private const float DaggerFlyTime = 0.4f;       //匕首飞行时间
+    private const float DaggerFlyTime = 0.15f;       //匕首飞行时间
     private const float AttackCd = 1f;              //攻击间隙
     private const float ScaleMultiplier = 0.1f;    //缩放比例
     private static readonly int IsWalking = Animator.StringToHash("isWalking");
-    
 
 
     private void Start()
@@ -60,6 +59,11 @@ public class DoubleKnives : Enemies ,IObserver
         DaggerAttackArea.GetComponentInChildren<JaculatoryDagger>().damage = 10;
         SlashAttackArea.GetComponentInChildren<TriggerAttack>().damage = 10;
         SprintAttackArea.GetComponent<BoxCollider2D>().enabled = false;
+    }
+    
+    private void OnEnable()
+    {
+        healthValue = 100;
     }
 
     private void FixedUpdate()
@@ -90,23 +94,42 @@ public class DoubleKnives : Enemies ,IObserver
     private void DirectionChange()
     {
         faceDirection = transform.position.x < playerTrans.position.x ? -1 : 1;
-        transform.localScale=new Vector3(faceDirection*ScaleMultiplier, ScaleMultiplier, 1);
+        transform.localScale=new Vector3(faceDirection, 1, 1)*ScaleMultiplier;
     }
 
+    
+    public void SetPatrolPoint()
+    {
+        var pos = transform.position;
+        var offset = new Vector3(5, 0);
+        patrolAreaPointL = pos - offset;
+    }
+    public void SetPatrolPoint(float left,float right)
+    {
+        var pos = transform.position;
+        patrolAreaPointL = pos - new Vector3(left, 0);
+        patrolAreaPointR = pos + new Vector3(right, 0);
+    }
     private void Patrol()
     {
         anim.SetBool(IsWalking,true);
-        if (faceDirection == 1 && transform.position.x < patrolAreaPointL.position.x ||
-            faceDirection == -1 && transform.position.x > patrolAreaPointR.position.x)
+        float selfX = transform.position.x;
+        float xL = patrolAreaPointL.x;
+        float xR = patrolAreaPointR.x;
+        if (faceDirection == 1 && selfX < xL || faceDirection == -1 && selfX > xR)
         {
             faceDirection *= -1;
-            transform.localScale = new Vector3(faceDirection*ScaleMultiplier,ScaleMultiplier,1);
+            transform.localScale = new Vector3(faceDirection,1,1)*ScaleMultiplier;
         }
-        if(faceDirection==1&& transform.position.x > patrolAreaPointL.position.x)//面向左边在左点右方向左走
-            rb.velocity=Vector2.left*WalkingSpeed;
-        if(faceDirection == -1 && transform.position.x < patrolAreaPointR.position.x)//面向右边在右点左方向左走
-            rb.velocity=Vector2.right*WalkingSpeed;
-        
+
+        rb.velocity = faceDirection switch
+        {
+            //面向左边在左点右方向左走
+            1 when selfX > xL => Vector2.left * WalkingSpeed,
+            //面向右边在右点左方向左走
+            -1 when selfX < xR => Vector2.right * WalkingSpeed,
+            _ => rb.velocity
+        };
     }
 
     #region Combat
@@ -138,37 +161,22 @@ public class DoubleKnives : Enemies ,IObserver
 
     private void SkillChoose()
     {
+        int rand = Random.Range(1, 11);
         if (Distance > 6)
-            skill = Skill.SSprintAttack;
-        else if (Distance > 3)
         {
-            if (Random.Range(0, 10) < 5)
-            {
+            if (rand<8) 
                 skill = Skill.SSprintAttack;
-                if (Random.Range(0, 3) < 1)
-                {
-                    DirectionChange();
-                    skill = Skill.SDaggerThrow;
-                }
-            }
-            else
-            {
-                skill = Skill.SDaggerThrow;
-            }
+            else 
+                Attackable = false;
+        }
+        else if(Distance>3)
+        {
+            Attackable = true;
+            skill = rand < 4 ? Skill.SSprintAttack : Skill.SDaggerThrow;
         }
         else
         {
-            int rand = Random.Range(0, 10);
-            if (rand<1)
-            {
-                skill = Skill.SSprintAttack;
-                if (Random.Range(0, 3) < 1)
-                    skill = Skill.SDaggerThrow;
-            }
-            else if (rand < 4)
-                skill = Skill.SDaggerThrow;
-            else
-                skill = Skill.SSlashAttack;
+            skill = rand < 4 ? Skill.SDaggerThrow : Skill.SSlashAttack;
         }
         SkillBegin(skill);
     }
@@ -225,7 +233,6 @@ public class DoubleKnives : Enemies ,IObserver
     private void ChargeOver()
     {
         rb.velocity = new Vector2(direction.x*SprintSpeed, 0);//给与当前朝向的速度
-        anim.Play("attack_sprint");
     }
     
     #endregion
@@ -273,11 +280,6 @@ public class DoubleKnives : Enemies ,IObserver
 
     #endregion
     
-
-    public void OnNotify(Entity entity, EventType eventType)
-    {
-        throw new NotImplementedException();
-    }
 
 
 }
