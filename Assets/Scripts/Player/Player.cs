@@ -201,7 +201,7 @@ public class Player : GameActor
             if (animator.GetBool(jumping))
             {
                 animator.Play("gun_jump_attack");
-                rb.gravityScale = 0;
+                rb.gravityScale = 0.5f;
             }
             else
             {
@@ -328,7 +328,7 @@ public class Player : GameActor
     public void AttackDone()
     {
         isAttack = false;
-        rb.gravityScale = 3;
+        rb.gravityScale = 4;
     }
 
 }
