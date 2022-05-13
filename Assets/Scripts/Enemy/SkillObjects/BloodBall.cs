@@ -1,8 +1,9 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class BloodBall : MonoBehaviour
+public class BloodBall : TriggerAttack
 {
     [SerializeField] private SpriteRenderer sprite;
     [SerializeField] private Rigidbody2D rb;
@@ -10,23 +11,24 @@ public class BloodBall : MonoBehaviour
     {
         sprite = GetComponent<SpriteRenderer>();
         rb = GetComponent<Rigidbody2D>();
+        Function += Function1;
     }
 
-    private void OnCollisionEnter(Collision collision)
+    private void Function1(Collider2D col)
     {
-        if (collision.gameObject.CompareTag("Player"))
+        if (col.CompareTag("Player"))
         {
-            collision.gameObject.GetComponent<Attacked>().OnGetHurt(transform.position,Vector2.zero, 20);
+            col.GetComponent<Attacked>().OnGetHurt(transform.position,Vector2.zero, 20);
             StartCoroutine(BloodBallFade());
         }
-        else if(collision.gameObject.CompareTag("Wall"))
+        else if(col.CompareTag("Wall"))
         {
             StopCoroutine(BloodBallFade());
         }
         
     }
     
-    
+
     /// <summary>
     /// 血球淡出消失
     /// </summary>
