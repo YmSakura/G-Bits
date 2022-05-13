@@ -22,11 +22,12 @@ public class JaculatoryDagger : CollisionAttack
     /// 委托函数1
     /// 进行碰撞判定，如果是碰到玩家则给于伤害，如果是碰到墙则消失
     /// </summary>
-    /// <param name="other"></param>
-    private void Function1(Collision2D col)
+    /// <param name="col"></param>
+    private void Function1(Collision col)
     {
         if (col.gameObject.CompareTag("Player"))
         {
+            rb.velocity=Vector2.zero;
             col.gameObject.GetComponent<Attacked>().OnGetHurt(transform.position,force, damage);
             StartCoroutine(DaggerFade());
         }

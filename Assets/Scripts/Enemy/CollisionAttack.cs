@@ -13,7 +13,7 @@ public class CollisionAttack : MonoBehaviour
     public int damage;
     public Vector2 force=Vector2.zero;
     
-    protected delegate void Func(Collision2D collision);
+    protected delegate void Func(Collision collision);
     protected Func Function;
 
     private void Start()
@@ -24,12 +24,12 @@ public class CollisionAttack : MonoBehaviour
         Function += DefaultFunc;
     }
 
-    private void OnCollisionEnter2D(Collision2D col)
+    private void OnCollisionEnter(Collision collision)
     {
-        Function(col);
+        Function(collision);
     }
 
-    protected void DefaultFunc(Collision2D collision)
+    private void DefaultFunc(Collision collision)
     {
         if (collision.gameObject.CompareTag("Player"))
         {
