@@ -36,7 +36,8 @@ public class SpellMinion : Enemies
     private const float ScaleMultiplier = 0.1f;
     private const float StickForce = 50;
     private const float BloodSpearTime = 0.2f;
-    enum Skill
+
+    private enum Skill
     {
         SBloodBall,
         SBloodSpear,
@@ -271,7 +272,7 @@ public class SpellMinion : Enemies
         Vector2 dir = new Vector2(center.x < playerTrans.position.x ? -1 : 1,0);
         Physics2D.OverlapArea(left, right, PlayerFilter2D, player);
         Debug.DrawLine(left,right,Color.white);
-        player[0]?.gameObject.GetComponent<Attacked>().OnGetHurt(playerTrans.position,dir*StickForce,40);
+        player[0]?.gameObject.GetComponent<Attacked>().OnGetHurt(playerTrans.position,dir*StickForce,40,2);
             
     }
 

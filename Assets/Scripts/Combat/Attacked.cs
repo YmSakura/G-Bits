@@ -12,7 +12,7 @@ public class Attacked: MonoBehaviour
     /// <summary>
     /// 攻击者将获取这个组件，并调用这个组件此函数以触发被击者的受击函数
     /// </summary>
-    public virtual void OnGetHurt(Vector2 position,Vector2 force,int damage)
+    public virtual void OnGetHurt(Vector2 position,Vector2 force,int damage,int priorityLevel)
     {
         OnGetHit?.Invoke(position, force, damage);
     }
@@ -21,4 +21,5 @@ public class Attacked: MonoBehaviour
     {
         GetInterrupted?.Invoke();
     }
+    
 }

@@ -9,12 +9,7 @@ using UnityEngine.UIElements;
 using Random = UnityEngine.Random;
 
 
-enum Skill
-{
-    SSprintAttack,
-    SDaggerThrow,
-    SSlashAttack
-}
+
 public class DoubleKnives : Enemies
 {
     [Header("基本属性")] 
@@ -48,7 +43,12 @@ public class DoubleKnives : Enemies
     private const float ScaleMultiplier = 0.1f;    //缩放比例
     private static readonly int IsWalking = Animator.StringToHash("isWalking");
 
-
+    private enum Skill
+    {
+        SSprintAttack,
+        SDaggerThrow,
+        SSlashAttack
+    }
     private void Start()
     {
         BaseInit(); //加载基类脚本初始化

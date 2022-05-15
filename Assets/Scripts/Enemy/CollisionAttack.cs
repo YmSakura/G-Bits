@@ -11,7 +11,9 @@ using UnityEngine;
 public class CollisionAttack : MonoBehaviour
 {
     public int damage;
+    public int priorityLevel = 1;
     public Vector2 force=Vector2.zero;
+    
     
     protected delegate void Func(Collision2D collision);
     protected Func Function;
@@ -33,7 +35,7 @@ public class CollisionAttack : MonoBehaviour
     {
         if (collision.gameObject.CompareTag("Player"))
         {
-            collision.gameObject.GetComponent<Attacked>().OnGetHurt(transform.position,force, damage);
+            collision.gameObject.GetComponent<Attacked>().OnGetHurt(transform.position,force, damage,priorityLevel);
         }
     }
 }

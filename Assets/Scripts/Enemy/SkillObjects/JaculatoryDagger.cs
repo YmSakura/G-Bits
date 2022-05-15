@@ -27,7 +27,7 @@ public class JaculatoryDagger : CollisionAttack
     {
         if (col.gameObject.CompareTag("Player"))
         {
-            col.gameObject.GetComponent<Attacked>().OnGetHurt(transform.position,force, damage);
+            col.gameObject.GetComponent<Attacked>().OnGetHurt(transform.position,force, damage,1);
             StartCoroutine(DaggerFade());
         }
         else if(col.gameObject.CompareTag("Wall"))

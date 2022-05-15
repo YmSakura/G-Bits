@@ -11,6 +11,7 @@ using UnityEngine;
 public class TriggerAttack : MonoBehaviour
 {
     public int damage;
+    public int priorityLevel = 1;
     public Vector2 force=Vector2.zero;
     
     protected delegate void Func(Collider2D col);
@@ -33,7 +34,7 @@ public class TriggerAttack : MonoBehaviour
     {
         if (col.CompareTag("Player"))
         {
-            col.GetComponent<Attacked>().OnGetHurt(transform.position,force, damage);
+            col.GetComponent<Attacked>().OnGetHurt(transform.position,force, damage,priorityLevel);
         }
     }
 }

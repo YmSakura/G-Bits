@@ -18,7 +18,7 @@ public class BloodBall : TriggerAttack
     {
         if (col.CompareTag("Player"))
         {
-            col.GetComponent<Attacked>().OnGetHurt(transform.position,Vector2.zero, 20);
+            col.GetComponent<Attacked>().OnGetHurt(transform.position,Vector2.zero, 20,1);
             StartCoroutine(BloodBallFade());
         }
         else if(col.CompareTag("Wall"))
