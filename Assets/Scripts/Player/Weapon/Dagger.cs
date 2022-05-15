@@ -50,7 +50,7 @@ public class Dagger : Weapon
         if (other.gameObject.CompareTag("Enemies"))
         {
             other.gameObject.GetComponent<Attacked>()
-                .OnGetHurt(other.transform.position, Vector2.zero, basicAttackFirst);
+                .OnGetHurt(other.transform.position, Vector2.zero, basicAttackFirst,1);
         }
     }
 }
