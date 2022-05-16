@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using Random = UnityEngine.Random;
 
 // ReSharper disable once CheckNamespace
 public class SpellMinion : Enemies
@@ -9,40 +10,73 @@ public class SpellMinion : Enemies
     [Header("基本属性")] 
     private int faceDirection = 1;
 
-    [Header("组件")] 
-    private GameObject BloodBallPrefab;
-    private GameObject BloodSpearPrefab;
-    private GameObject[] BloodBall = new GameObject[3];
-    
-    
-    [Header("技能属性")]
+    [SerializeField] private float moveSpeed = 0.75f;
 
+    [Header("组件")] 
+    private Animator anim;
+    private Rigidbody2D rb;
+    [SerializeField]private GameObject bloodBallPrefab;
+    [SerializeField]private GameObject bloodSpearPrefab;
+    
+
+
+    [Header("技能属性")]
+    private GameObject[] BloodBall = new GameObject[3];
+    private GameObject bloodSpear;
+    private static readonly int IsWalking = Animator.StringToHash("isWalking");
 
     [Header("常量")] 
-    private const float AttackCd = 1.2f;
-    private const float BloodBallScale = 0.5f;
+    private const float AttackCd = 1.5f;
+    private const float BloodBallScale = 0.2f;
     private const float BloodBallSpeed = 10f;
-    private const float BloodBallDamage = 10f;
-    private const float BloodSpearScale = 0.5f;
-    private const float BloodSpearSpeed = 20f;
-    private const float BloodSpearDamage = 10f;
+    private const int BloodBallDamage = 10;
+    private const float BloodSpearScale = 0.2f;
+    private const float BloodSpearSpeed = 30f;
+    private const int BloodSpearDamage = 10;
+    private const float ScaleMultiplier = 0.1f;
+    private const float StickForce = 50;
+    private const float BloodSpearTime = 0.2f;
 
-    enum Skill
+    private enum Skill
     {
         SBloodBall,
         SBloodSpear,
         SStickAttack
     }
-    void Start()
+
+    private void Start()
     {
         BaseInit();
         healthValue = 80;
+        anim=GetComponent<Animator>();
+        rb = GetComponent<Rigidbody2D>();
+        bloodBallPrefab.GetComponent<TriggerAttack>().damage = BloodBallDamage;
+        bloodSpearPrefab.GetComponent<CollisionAttack>().damage = BloodSpearDamage;
+    }
+
+    private void Awake()
+    {
+        
+    }
+
+    private void OnEnable()
+    {
+        healthValue = 80;
+    }
+
+    private void FixedUpdate()
+    {
+        if (!InSkill)
+        {
+            AlertValueChange();
+        }
     }
 
     // Update is called once per frame
     void Update()
     {
-        
+        if (!inCombat) return;
+        CombatAI();
     }
 
     private void OnDestroy()
@@ -51,21 +85,86 @@ public class SpellMinion : Enemies
     }
 
 
+    
+    private void DirectionChange()
+    {
+        if (faceDirection * (transform.position.x - playerTrans.position.x) < 0) return;//当玩家敌人相对位移和朝向符合则无需转向
+        faceDirection *= -1;
+        transform.localScale=new Vector3(faceDirection, 1, 1)*ScaleMultiplier;
+        transform.position += new Vector3(faceDirection*1.676f,0,0);
+    }
+    
+
+    
+    #region AI
+
+    private void CombatAI()
+    {
+        if (InSkill) return;
+        DirectionChange();
+        KeepAway();
+        if(Attackable)
+            SkillChoose();
+    }
+
+
+    private void KeepAway()
+    {
+        if (Distance < 3)
+        {
+            rb.velocity = new Vector2(faceDirection * -moveSpeed, 0);
+            anim.SetBool(IsWalking, true);
+        }
+        else if (Distance>6&&Distance<9)
+        {
+            rb.velocity=Vector2.zero;
+            anim.SetBool(IsWalking, false);
+        }
+        else if(Distance>8)
+        {
+            rb.velocity = new Vector2(faceDirection * moveSpeed, 0);
+            anim.SetBool(IsWalking, true);
+        }
+    }
+    #endregion
+
+    #region Skill
+
+    private void SkillChoose()
+    {
+        Skill skill;
+        int rand = Random.Range(1, 11);
+        if(Distance<2)
+        {
+            if (rand<=6) skill = Skill.SStickAttack;
+            else if (rand < 9) skill = Skill.SBloodBall;
+            else skill = Skill.SBloodSpear;
+        }
+        else
+        {
+            skill = rand < 7 ? Skill.SBloodBall : Skill.SBloodSpear;
+        }
+        SkillBegin(skill);
+    }
 
     private void SkillBegin(Skill skill)
     {
         InSkill = true;
         Attackable = false;
+        rb.velocity=Vector2.zero;
         switch (skill)
         {
             case Skill.SBloodBall:
-                //anim.Play
+                Debug.Log("血球");
+                anim.Play("attack_consecutive");
                 break;
             case Skill.SBloodSpear:
-                //anim.Play
+                Debug.Log("血矛");
+                anim.Play("charge_knife");
                 break;
             case Skill.SStickAttack:
-                //anim.Play
+                Debug.Log("棍击");
+                anim.Play("charge");
                 break;
         }
     }
@@ -81,71 +180,101 @@ public class SpellMinion : Enemies
                 //anim.Play
                 break;
             case Skill.SStickAttack:
-                Vector2 selfPosition = transform.position;
-                Vector2 left = new Vector2(selfPosition.x - 2, selfPosition.y + 1);
-                Vector2 right = new Vector2(selfPosition.x + 2, selfPosition.y - 1);
-                PlayerColl[0] = null;
-                Physics2D.OverlapArea(left, right, PlayerFilter2D, PlayerColl); 
-                //以AB两点画矩形区域,并筛选出其中的Player层的object(即玩家),存入PlayerColl数组中
-                PlayerColl[0]?.GetComponent<Attacked>().OnGetHurt(PlayerColl[0].transform.position,Vector2.zero, 40);
+                
                 break;
         }
-        InSkill = false;
         StartCoroutine(ResetAttackCd(AttackCd));
     }
-    
-    #region AI
 
-    private void CombatAI()
-    {
-        
-    }
 
-    private void MovementAI()
-    {
-        
-    }
-
-    private void KeepAway()
-    {
-        
-    }
     #endregion
-    
     
     #region BloodBall
     
 
     private IEnumerator BloodBallGenerate(int index)
     {
-        BloodBall[index] = ObjectPool.Instance.GetObject(BloodBallPrefab);
-        BloodBall[index].transform.position = transform.position +new Vector3(5, 0, 0);
-        BloodBall[index].transform.localScale =
-            new Vector3(faceDirection * BloodBallScale, BloodBallScale, BloodBallScale);
-        BloodBall[index].GetComponent<Rigidbody2D>().velocity = new Vector2(BloodBallSpeed*faceDirection, 0);
-        yield return new WaitForSeconds(1f);
+        BloodBall[index] = ObjectPool.Instance.GetObject(bloodBallPrefab);
+        
+        Transform trans = BloodBall[index].transform;
 
+        trans.position = position;
+        trans.localScale = new Vector3(faceDirection*BloodBallScale,BloodBallScale,1);
+
+        float timer = 0;
+        do
+        {
+            if (!BloodBall[index]) yield break;
+            var angle = Vector2.Angle(Vector2.zero, playerTrans.position-transform.position);
+            trans.rotation = new Quaternion(0, 0, angle, 0);
+            timer += Time.fixedDeltaTime;
+            yield return new WaitForFixedUpdate();
+        } while (timer<0.3f);
+        
+        if(BloodBall[index].GetComponent<SpriteRenderer>().color.a<1)yield break;
+        Vector2 dir = playerTrans.position-transform.position;
+        BloodBall[index].GetComponent<Rigidbody2D>().velocity=BloodBallSpeed * (dir/dir.magnitude);
+        
+        yield return new WaitForSeconds(2f);
+        
+        if (BloodBall[index])
+            StartCoroutine(BloodBall[index].GetComponent<BloodBall>().BloodBallFade());
+        
     }
 
+    // private IEnumerator BloodBallShot()
+    // {
+    //     foreach (GameObject bloodBall in BloodBall)
+    //     {
+    //         if(!bloodBall) continue;
+    //         Vector2 dir =   playerTrans.position-transform.position;
+    //         bloodBall.GetComponent<Rigidbody2D>().velocity=BloodBallSpeed * (dir/dir.magnitude);
+    //     }
+    //     yield return new WaitForSeconds(2f);
+    //     foreach (GameObject bloodBall in BloodBall)
+    //     {
+    //         if (bloodBall)
+    //             StartCoroutine(bloodBall.GetComponent<BloodBall>().BloodBallFade());
+    //     }
+    // }
+    
     #endregion
 
     #region BloodSpear
 
 
-    private IEnumerator BloodSpearGenerate()
+    private void BloodSpearGenerate()
     {
-        GameObject bloodSpear = ObjectPool.Instance.GetObject(BloodBallPrefab);
-        bloodSpear.transform.position = transform.position +new Vector3(5, 0, 0);
+        bloodSpear = ObjectPool.Instance.GetObject(bloodSpearPrefab);
+        bloodSpear.transform.position = transform.position +new Vector3(0, 0.5f, 0);
         bloodSpear.transform.localScale =
             new Vector3(faceDirection * BloodSpearScale, BloodSpearScale, BloodSpearScale);
-        bloodSpear.GetComponent<Rigidbody2D>().velocity = new Vector2(BloodSpearSpeed*faceDirection, 0);
-        yield return new WaitForSeconds(1f);
+    }
 
+    private IEnumerator BloodSpearThrow()
+    {
+        bloodSpear.GetComponent<Rigidbody2D>().velocity = new Vector2(BloodSpearSpeed*faceDirection, 0);
+        yield return new WaitForSeconds(BloodSpearTime);
+        if (bloodSpear)
+            StartCoroutine(bloodSpear.GetComponent<BloodSpear>().BloodSpearFade());
+        bloodSpear = null;
     }
     #endregion
 
     #region StickAttack
-    
+
+    public void StickAttack()
+    {
+        Collider2D[] player=new Collider2D[1];
+        Vector2 center = transform.position;
+        Vector2 left = center + new Vector2(-2, -1);
+        Vector2 right = center + new Vector2(2, 0);
+        Vector2 dir = new Vector2(center.x < playerTrans.position.x ? -1 : 1,0);
+        Physics2D.OverlapArea(left, right, PlayerFilter2D, player);
+        Debug.DrawLine(left,right,Color.white);
+        player[0]?.gameObject.GetComponent<Attacked>().OnGetHurt(playerTrans.position,dir*StickForce,40,2);
+            
+    }
 
     #endregion
 }
