@@ -103,6 +103,7 @@ public abstract class Enemies : Subject
                 return;
             }
             Distance = AlertCheck();                                                //战斗中但是不在警戒区域内是否需要检测
+            Debug.Log("检测距离");
             if (Distance >= 0 && !inCombat)         //敌方目标还不在战斗状态中并且看到了玩家则警戒值上升
             {
 
@@ -146,7 +147,11 @@ public abstract class Enemies : Subject
             backAttackArea.SetActive(true);
         }
     }
-    
+
+    protected int GetDistance()
+    {
+        return (int)(playerTrans.position - transform.position).sqrMagnitude;
+    }
     
     /// <summary>
     /// 当有一敌方目标发现玩家进入战斗状态，会调用此函数让附近区域内的敌方目标一同进入战斗状态
