@@ -284,7 +284,7 @@ public class Player : GameActor
     /// <param name="position">受伤的坐标</param>
     /// <param name="force">击退力</param>
     /// <param name="damage">受到的伤害</param>
-    private void OnGetHurt(Vector2 position, Vector2 force, int damage)
+    private void OnGetHurt(Vector2 position, Vector2 force, int damage,int priorityLevel)
     {
         Debug.Log("相机抖动");
         myInpulse.GenerateImpulse(Vector2.down * 10);

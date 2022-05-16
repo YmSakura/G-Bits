@@ -5,7 +5,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using Object = System.Object;
 
-public class Enemies : Subject
+public abstract class Enemies : Subject
 {
     [Header("基本属性")] 
     public float healthValue;       //生命值
@@ -14,6 +14,8 @@ public class Enemies : Subject
     public float alertValue;        //警戒值
     public Vector2 position;        //自身坐标
     public Vector2 direction;       //自身朝向
+    protected int StateLevel = 1;
+    protected bool Interruptible=true;
     
     [Header("技能属性")]
     protected bool InSkill = false;
@@ -26,8 +28,8 @@ public class Enemies : Subject
     //[SerializeField]private Transform alertAreaPointC;      //矩形仇恨区域对角线另一段
     [SerializeField]protected Transform playerTrans;          //玩家坐标
     [SerializeField]private GameObject backAttackArea;
-    [SerializeField]private LayerMask playerMask;       //Player层包括玩家(所有可以被看见的)(用于判断)
-    [SerializeField]private LayerMask visibleMask;      //Visible层包括墙体(所有可以被看见的,会被阻挡视线的)(用于判断)
+    [SerializeField]protected LayerMask playerMask;       //Player层包括玩家(所有可以被看见的)(用于判断)
+    [SerializeField]protected LayerMask visibleMask;      //Visible层包括墙体(所有可以被看见的,会被阻挡视线的)(用于判断)
     [SerializeField]private LayerMask enemyMask;        //Enemy层包括所有敌人(用于范围唤醒敌人进入战斗状态)
     protected ContactFilter2D PlayerFilter2D;             //用于筛选出Player层的对象
     private ContactFilter2D enemyFilter2D;              //用于筛选出Enemy层的对象
@@ -174,6 +176,7 @@ public class Enemies : Subject
     protected IEnumerator ResetAttackCd(float attackCd)
     {
         Debug.Log("重置状态");
+        StateLevel = 0;
         InSkill = false;
         Movable = true;                                 //可以继续移动
         yield return new WaitForSeconds(attackCd);      //等待攻击CD
@@ -181,13 +184,26 @@ public class Enemies : Subject
         Debug.Log("重置结束");
     }
     
-    protected void GetHit(Vector2 position, Vector2 force,int damage)
+    protected void GetHit(Vector2 position, Vector2 force,int damage,int priorityLevel)
     {
         healthValue-= damage;
         inCombat = true;
         alertValue = 100;
+        if (priorityLevel>StateLevel&&Interruptible)
+        {
+            GetInterrupted();
+        }
     }
 
+    protected abstract void GetInterrupted();
+
+    protected void RecoverFromHurt()
+    {
+        InSkill = false;
+        Movable = true;                                 //可以继续移动
+        Attackable = true;                              //CD过后重新可以继续攻击
+        StateLevel = 0;
+    }
     private void GetSlider()
     {
         alertSlider =ObjectPool.Instance.GetUI(alertBarPrefab);

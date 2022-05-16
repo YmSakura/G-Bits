@@ -6,7 +6,7 @@ public class Attacked: MonoBehaviour
     /// <summary>
     /// 受击事件，受攻击者向此事件中添加或移除监听函数以控制事件回调
     /// </summary>
-    public event Action<Vector2, Vector2,int> OnGetHit;
+    public event Action<Vector2, Vector2,int,int> OnGetHit;
 
     public event Action GetInterrupted; 
     /// <summary>
@@ -14,7 +14,7 @@ public class Attacked: MonoBehaviour
     /// </summary>
     public virtual void OnGetHurt(Vector2 position,Vector2 force,int damage,int priorityLevel)
     {
-        OnGetHit?.Invoke(position, force, damage);
+        OnGetHit?.Invoke(position, force, damage,priorityLevel);
     }
 
     public virtual void OnGetInterrupted()

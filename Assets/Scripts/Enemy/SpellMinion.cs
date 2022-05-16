@@ -155,14 +155,17 @@ public class SpellMinion : Enemies
         switch (skill)
         {
             case Skill.SBloodBall:
+                StateLevel = 1;
                 Debug.Log("血球");
                 anim.Play("attack_consecutive");
                 break;
             case Skill.SBloodSpear:
+                StateLevel = 1;
                 Debug.Log("血矛");
                 anim.Play("charge_knife");
                 break;
             case Skill.SStickAttack:
+                StateLevel = 2;
                 Debug.Log("棍击");
                 anim.Play("charge");
                 break;
@@ -185,7 +188,13 @@ public class SpellMinion : Enemies
         }
         StartCoroutine(ResetAttackCd(AttackCd));
     }
+    
 
+    protected override void GetInterrupted()
+    {
+        StateLevel = 10;
+        anim.Play("being_attacked");
+    }
 
     #endregion
     
