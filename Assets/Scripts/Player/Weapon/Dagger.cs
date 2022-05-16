@@ -25,26 +25,18 @@ public class Dagger : Weapon
         
     }
 
-    /// <summary>
-    /// 开启碰撞体，由动画事件调用
-    /// </summary>
     public void OpenCollider()
     {
         knifeL.enabled = true;
         knifeR.enabled = true;
     }
-    /// <summary>
-    /// 关闭碰撞体，由动画事件调用
-    /// </summary>
+
     public void CloseCollider()
     {
         knifeL.enabled = false;
         knifeR.enabled = false;
     }
-    /// <summary>
-    /// 碰撞检测，攻击到敌人则调用敌人的受击函数
-    /// </summary>
-    /// <param name="other"></param>
+    
     private void OnCollisionEnter2D(Collision2D other)
     {
         if (other.gameObject.CompareTag("Enemies"))

@@ -4,45 +4,28 @@ using System.Collections.Generic;
 using UnityEngine;
 
 public class BackAttackDetect : MonoBehaviour
-{ 
-    private Enemies Enemy;
-    [SerializeField]private GameObject backAttackHintUIPrefab;
-    private static GameObject backAttackHintUI;
-    public static GameObject AimTarget;
+{
+    [SerializeField]private Enemies Enemy;
+    [SerializeField]private GameObject BackAttackHintUI;
     private void OnTriggerEnter2D(Collider2D other)
     {
-        if (!Enemy.inCombat && other.CompareTag("Player"))
-        {
-            backAttackHintUI.SetActive(true);
-            AimTarget = transform.parent.gameObject;
-        }
+        if(!Enemy.inCombat&& other.CompareTag("Player"))
+            BackAttackHintUI.SetActive(true);
+            
     }
 
     private void OnTriggerExit2D(Collider2D other)
     {
         if(other.CompareTag("Player"))
-            backAttackHintUI.SetActive(false);
-    }
-
-    private void Awake()
-    {
-        if (backAttackHintUI) return;
-        backAttackHintUI=ObjectPool.Instance.GetObject(backAttackHintUIPrefab);
-        // //backAttackHintUI.GetComponent<RectTransform>().Translate(0, -228, 0);
-    }
-
-    private void Start()
-    {
-        Enemy = transform.parent.GetComponent<Enemies>();
+            BackAttackHintUI.SetActive(false);
     }
 
     private void Update()
     {
         if (Enemy.inCombat)
         {
-            backAttackHintUI.SetActive(false);
+            BackAttackHintUI.SetActive(false);
             gameObject.SetActive(false);
         }
     }
-    
 }
