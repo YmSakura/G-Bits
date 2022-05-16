@@ -14,6 +14,7 @@ public class InputHandler : MonoBehaviour
     private ICommand buttonQ;
     private ICommand buttonE;
     private ICommand buttonF;
+    private ICommand buttonU;
 
     [Header("可被控制的游戏角色")]
     public Player player;
@@ -45,6 +46,7 @@ public class InputHandler : MonoBehaviour
         if (Input.GetKeyDown(KeyCode.F)) return buttonF;//冲刺攻击
         if (Input.GetKeyDown(KeyCode.Q)) return buttonQ;//切换武器
         if (Input.GetKeyDown(KeyCode.E)) return buttonE;//切换形态
+        if (Input.GetKeyDown(KeyCode.U)) return buttonU;//蓄力
 
         //没输入就返回null
         return null;

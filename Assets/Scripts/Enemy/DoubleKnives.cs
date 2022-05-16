@@ -191,16 +191,19 @@ public class DoubleKnives : Enemies
             case Skill.SSprintAttack:
                 rb.velocity=Vector2.zero;
                 Movable = false;
+                StateLevel = 2;
                 anim.Play("charge");
                 break;
             case Skill.SDaggerThrow:
                 if(CdReset!=null)
                     StopCoroutine(CdReset);
+                StateLevel = 1;
                 anim.Play("throw_charge");
                 break;
             case Skill.SSlashAttack:
                 rb.velocity=Vector2.zero;
                 Movable = false;
+                StateLevel = 1;
                 anim.Play("attack_near");
                 break;
         }
@@ -218,9 +221,16 @@ public class DoubleKnives : Enemies
             case Skill.SSlashAttack:
                 break;
         }
-        Movable = true;
         CdReset=StartCoroutine(ResetAttackCd(AttackCd));
         Debug.Log("技能结束");
+    }
+
+    protected override void GetInterrupted()
+    {
+        StateLevel = 10;
+        anim.Play("being_attacked");
+        
+        
     }
 
     #endregion

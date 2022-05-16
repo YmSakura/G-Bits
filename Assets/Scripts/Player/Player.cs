@@ -1,26 +1,27 @@
 using System;
 using System.Collections;
-using System.Collections.Generic;
-using System.Data;
-using System.Text;
+using Cinemachine;
 using UnityEditor.Animations;
 using UnityEngine;
+using UnityEngine.UI;
 
 enum Status { Normal, Sneak }
 
 public class Player : GameActor
 {
-    [Header("不同的animator")] public AnimatorController scytheController;
+    [Header("不同的animatorController")] 
+    public AnimatorController scytheController;
     public AnimatorController gunController;
     public AnimatorController daggerController;
 
-    [Header("自身组件")] private Rigidbody2D rb;
+    [Header("自身组件")] 
+    private Rigidbody2D rb;
     private Animator animator;
     private Collider2D collider2D;
     public Weapon weapon;
-    private Status status;
 
-    [Header("移动/跳跃参数")] [SerializeField] private float fallMultiplier = 3.0f;
+    [Header("移动/跳跃参数")] 
+    [SerializeField] private float fallMultiplier = 3.0f;
     [SerializeField] private float lowJumpMultiplier = 1.5f;
     [SerializeField] private LayerMask groundLayer;
     private float inputX;
@@ -33,39 +34,64 @@ public class Player : GameActor
         isWalk = "isWalk";
 
 
-    [Header("人物属性")] [SerializeField] private int maxHp = 100;
+    [Header("人物属性")] 
+    [SerializeField] private int maxHp = 100;
     [SerializeField] private int hp;
     [SerializeField] private float attack = 1f;
     [SerializeField] private float moveSpeed;
     [SerializeField] private float jumpForce;
     [SerializeField] private float sprintSpeed;
-    private float preMoveSpeed, preLastAttack;
+    private float normalMoveSpeed, normalLastAttack;//用于记录普通状态的速度和攻击力
+    private bool isAttack, beAttacked;
+    private Status status;
 
-    [Header("蓄力设置")] [SerializeField] private float chargeMaxTime = 1.0f;
+    [Header("蓄力设置")] 
+    [SerializeField] private float chargeMaxTime = 1.0f;
     [SerializeField] private float chargeMinTime = 0.1f;
     [SerializeField] private float chargeTime; //蓄力时间
     [SerializeField] private bool chargeDone; //蓄力完成
     [SerializeField] private bool charging; //是否在蓄力中
 
-    [Header("特殊攻击")] private bool isSprinting, lastSprintDone;
-    private bool isAttack, beAttacked;
+    [Header("特殊攻击")] 
+    private bool isSprinting, lastSprintDone;
 
+    [Header("特殊效果")] 
+    private CinemachineImpulseSource myInpulse;
+    
+    [Header("升级与点数")] 
+    [SerializeField] private int level;
+    private int basicPoint, skillPoint;
+    private int experiencePoint;
+    private int levelCount;
+
+    [Header("UI")] 
+    public Image healthbarPoint, healthbarEffect;
+    private float reduceSpeed = 0.05f;
+    
     public ICommand playerCommand;
 
     private void Awake()
     {
+        Init();
+    }
+
+    /// <summary>
+    /// 人物初始化
+    /// </summary>
+    private void Init()
+    {
+        hp = maxHp;
+        lastSprintDone = true;//默认上一次冲刺结束
+        status = Status.Normal;//初始为默认状态
+        //初始化组件
         rb = GetComponent<Rigidbody2D>();
         animator = GetComponent<Animator>();
         collider2D = GetComponent<Collider2D>();
         weapon = GetComponent<Dagger>(); //默认武器为匕首
         //添加受击函数
         GetComponent<Attacked>().OnGetHit += OnGetHurt;
-        //初始化人物属性
-        hp = maxHp;
-        //默认上一次冲刺结束
-        lastSprintDone = true;
-        //初始为默认状态
-        status = Status.Normal;
+        //抖动脚本
+        myInpulse = GetComponent<CinemachineImpulseSource>();
     }
 
     /// <summary>
@@ -80,6 +106,7 @@ public class Player : GameActor
     {
         GetInput();
         UpdateAnimator();
+        LevelUp();
         Jump();
         playerCommand?.Execute(this);
         if (isSprinting)
@@ -87,8 +114,13 @@ public class Player : GameActor
             rb.velocity = new Vector2(transform.localScale.x * 10 * sprintSpeed, rb.velocity.y);
             Debug.Log("冲刺中");
         }
-    }
 
+        if (Input.GetKeyDown(KeyCode.Return))
+        {
+            OnGetHurt(transform.position, Vector2.zero, 10);
+        }
+        
+    }
     private void FixedUpdate()
     {
         Move();
@@ -101,9 +133,30 @@ public class Player : GameActor
     {
         //inputX = Input.GetAxis("Horizontal");
         inputX = Input.GetAxisRaw("Horizontal");
-
     }
 
+    /// <summary>
+    /// 判断是否升级
+    /// </summary>
+    private void LevelUp()
+    {
+        if (experiencePoint >= level + 1 )
+        {
+            level++;
+            levelCount++;
+            experiencePoint -= level;
+            maxHp += 10;
+            hp = maxHp;
+            basicPoint++;
+            //每升三级额外给予一个基础点
+            if (levelCount == 3)
+            {
+                basicPoint++;
+                levelCount = 0;
+            }
+        }
+    }
+    
     /// <summary>
     /// 实时更新Animator参数
     /// </summary>
@@ -133,7 +186,6 @@ public class Player : GameActor
                 animator.SetBool(falling, false);
             }
         }
-
 
     }
 
@@ -232,11 +284,25 @@ public class Player : GameActor
     /// <param name="position">受伤的坐标</param>
     /// <param name="force">击退力</param>
     /// <param name="damage">受到的伤害</param>
-    private void OnGetHurt(Vector2 position, Vector2 force, int damage)
+    private void OnGetHurt(Vector2 position, Vector2 force, int damage,int priorityLevel)
     {
+        Debug.Log("相机抖动");
+        myInpulse.GenerateImpulse(Vector2.down * 10);
         hp -= damage;
-        beAttacked = true; //受击动画播放完将其置为false
+        hp = Mathf.Clamp(hp, 0, maxHp);//将Hp数值钳定在一定范围内
+        //beAttacked = true; //受击动画播放完将其置为false
         Debug.Log("Player被攻击");
+        healthbarPoint.fillAmount = (float)hp / maxHp;
+        StartCoroutine(Buffer());//血条缓冲效果
+    }
+
+    IEnumerator Buffer()
+    {
+        while (healthbarEffect.fillAmount > healthbarPoint.fillAmount)
+        {
+            healthbarEffect.fillAmount -= reduceSpeed;
+            yield return new WaitForSeconds(0.05f);
+        }
     }
 
     /// <summary>
@@ -272,16 +338,19 @@ public class Player : GameActor
         if (status == Status.Normal)
         {
             status = Status.Sneak;
-            preMoveSpeed = moveSpeed;
-            preLastAttack = attack;
+            Debug.Log("切换为潜行状态");
+            //属性增益
+            normalMoveSpeed = moveSpeed;
+            normalLastAttack = attack;
             moveSpeed *= 1.5f;
             attack *= 0.5f;
         }
         else
         {
             status = Status.Normal;
-            moveSpeed = preMoveSpeed;
-            attack = preLastAttack;
+            Debug.Log("切换为普通状态");
+            moveSpeed = normalMoveSpeed;
+            attack = normalLastAttack;
         }
     }
 
