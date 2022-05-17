@@ -51,6 +51,7 @@ public class Player : GameActor
     [SerializeField] private float chargeTime; //蓄力时间
     [SerializeField] private bool chargeDone; //蓄力完成
     [SerializeField] private bool charging; //是否在蓄力中
+    private bool chargeButtonDown;//是否按下蓄力按键
 
     [Header("特殊攻击")] 
     private bool isSprinting, lastSprintDone;
@@ -90,7 +91,7 @@ public class Player : GameActor
         weapon = GetComponent<Dagger>(); //默认武器为匕首
         //添加受击函数
         GetComponent<Attacked>().OnGetHit += OnGetHurt;
-        //抖动脚本
+        //相机抖动脚本
         myInpulse = GetComponent<CinemachineImpulseSource>();
     }
 
@@ -108,22 +109,35 @@ public class Player : GameActor
         UpdateAnimator();
         LevelUp();
         Jump();
+        Charge();
         playerCommand?.Execute(this);
         if (isSprinting)
         {
             rb.velocity = new Vector2(transform.localScale.x * 10 * sprintSpeed, rb.velocity.y);
-            Debug.Log("冲刺中");
+            //Debug.Log("冲刺中");
         }
-
+        //测试镜头抖动
         if (Input.GetKeyDown(KeyCode.Return))
         {
-            OnGetHurt(transform.position, Vector2.zero, 10,1);
+            OnGetHurt(transform.position, Vector2.zero, 10, 1);
         }
         
     }
     private void FixedUpdate()
     {
         Move();
+        if (charging)
+        {
+            chargeTime += Time.fixedDeltaTime;
+            if (chargeTime >= chargeMaxTime && Input.GetKeyUp(KeyCode.U))
+            {
+                animator.Play("knife_chargeattack");
+                animator.speed = 1;
+                chargeTime = 0;
+                charging = false;
+                isAttack = true;
+            }
+        }
     }
 
     /// <summary>
@@ -133,6 +147,7 @@ public class Player : GameActor
     {
         //inputX = Input.GetAxis("Horizontal");
         inputX = Input.GetAxisRaw("Horizontal");
+        chargeButtonDown = Input.GetKey(KeyCode.U);
     }
 
     /// <summary>
@@ -167,6 +182,8 @@ public class Player : GameActor
         animator.SetBool(isWalk, Math.Abs(inputX) > 0); //输入不为0时处于walk状态
         animator.SetBool("canSprint", isSprinting);
         animator.SetBool("sprintDone", lastSprintDone);
+        animator.SetBool("chargeButtonDown", chargeButtonDown);
+        animator.SetBool("isAttack", isAttack);
 
         if (animator.GetBool(jumping))
         {
@@ -188,11 +205,7 @@ public class Player : GameActor
         }
 
     }
-
-    private void isOnGround()
-    {
-
-    }
+    
 
     /// <summary>
     /// 移动函数，由本脚本获得的输入控制
@@ -201,6 +214,8 @@ public class Player : GameActor
     {
         Debug.Log("isAttack:" + isAttack);
         Debug.Log("beAttacked" + beAttacked);
+        Debug.Log("isSprinting" + isSprinting);
+        Debug.Log(inputX);
         if (inputX != 0 && !isSprinting && !isAttack && !beAttacked)
         {
             //具体的移动
@@ -242,7 +257,19 @@ public class Player : GameActor
     {
         if (animator.runtimeAnimatorController == daggerController)
         {
-            animator.Play("knife_attack1");
+            if (animator.GetBool(jumping))
+            {
+                animator.Play("knife_jump_attack");
+            }
+            else if(animator.GetBool(falling))
+            {
+                animator.Play("knife_fall_attack");
+            }
+            else
+            {
+                animator.Play("knife_attack1");
+            }
+            
         }
         if (animator.runtimeAnimatorController == scytheController)
         {
@@ -265,19 +292,6 @@ public class Player : GameActor
         Debug.Log("Player进行普通攻击");
     }
 
-    private void SetCharge(bool charging, float deltaTime)
-    {
-        if (charging)
-        {
-
-        }
-        else
-        {
-
-        }
-    }
-
-
     /// <summary>
     /// 受击函数
     /// </summary>
@@ -295,7 +309,6 @@ public class Player : GameActor
         healthbarPoint.fillAmount = (float)hp / maxHp;
         StartCoroutine(Buffer());//血条缓冲效果
     }
-
     IEnumerator Buffer()
     {
         while (healthbarEffect.fillAmount > healthbarPoint.fillAmount)
@@ -389,6 +402,17 @@ public class Player : GameActor
         lastSprintDone = true;
     }
 
+    private void OnCollisionEnter(Collision other)
+    {
+        //冲刺过程中碰到敌人
+        if (other.gameObject.CompareTag("Enemies") && isSprinting)
+        {
+            Debug.Log("冲刺到敌人");
+            other.gameObject.GetComponent<Attacked>()
+                .OnGetHurt(other.transform.position, Vector2.zero, 10,1);
+        }
+    }
+
     #endregion
 
     /// <summary>
@@ -400,4 +424,51 @@ public class Player : GameActor
         rb.gravityScale = 4;
     }
 
+    #region 蓄力
+
+    public void Charge()
+    {
+        if (chargeButtonDown && !charging)
+        {
+            animator.Play("knife_charge");
+            charging = true;
+            Debug.Log("Player进入蓄力状态");
+        }
+
+        if (!chargeButtonDown)
+        {
+            charging = false;
+            chargeTime = 0;
+        }
+    }
+    public void ChargeJudge()
+    {
+        if (chargeButtonDown)
+        {
+            animator.speed = 0;
+        }
+    }
+
+    #endregion
+
+    public override void UpAttack()
+    {
+        if (animator.runtimeAnimatorController == daggerController)
+        {
+            if (animator.GetBool(jumping))
+            {
+                animator.Play("knife_jump_attack_upward");
+            }
+            else if(animator.GetBool(falling))
+            {
+                animator.Play("knife_fall_attack_upward");
+            }
+            else
+            {
+                animator.Play("knife_attack_upward");
+            }
+        }
+        isAttack = true; //别忘了攻击结束将其置为false
+        Debug.Log("向上攻击");
+    }
 }
