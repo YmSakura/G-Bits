@@ -117,7 +117,7 @@ public class Player : GameActor
 
         if (Input.GetKeyDown(KeyCode.Return))
         {
-            OnGetHurt(transform.position, Vector2.zero, 10);
+            OnGetHurt(transform.position, Vector2.zero, 10,1);
         }
         
     }

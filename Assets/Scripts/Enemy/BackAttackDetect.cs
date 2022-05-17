@@ -27,7 +27,7 @@ public class BackAttackDetect : MonoBehaviour
     private void Awake()
     {
         if (backAttackHintUI) return;
-        backAttackHintUI=ObjectPool.Instance.GetObject(backAttackHintUIPrefab);
+        backAttackHintUI=ObjectPool.Instance.GetUI(backAttackHintUIPrefab);
         // //backAttackHintUI.GetComponent<RectTransform>().Translate(0, -228, 0);
     }
 

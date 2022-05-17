@@ -70,13 +70,15 @@ public class SpellMinion : Enemies
         {
             AlertValueChange();
         }
+        if (!inCombat) return;
+        CombatAI();
     }
 
     // Update is called once per frame
     void Update()
     {
-        if (!inCombat) return;
-        CombatAI();
+
+        
     }
 
     private void OnDestroy()
@@ -110,17 +112,18 @@ public class SpellMinion : Enemies
 
     private void KeepAway()
     {
-        if (Distance < 3)
+        var dis = GetDistance();
+        if (dis < 3*3)
         {
             rb.velocity = new Vector2(faceDirection * -moveSpeed, 0);
             anim.SetBool(IsWalking, true);
         }
-        else if (Distance>6&&Distance<9)
+        else if (dis>6*6&&dis<9*9)
         {
             rb.velocity=Vector2.zero;
             anim.SetBool(IsWalking, false);
         }
-        else if(Distance>8)
+        else if(dis>8*8)
         {
             rb.velocity = new Vector2(faceDirection * moveSpeed, 0);
             anim.SetBool(IsWalking, true);
