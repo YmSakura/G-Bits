@@ -61,7 +61,7 @@ public class Bird : Enemies
     // Update is called once per frame
     void Update()
     {
-        
+        base.Update();
         
     }
 

@@ -77,7 +77,7 @@ public class SpellMinion : Enemies
     // Update is called once per frame
     void Update()
     {
-
+        base.Update();
         
     }
 

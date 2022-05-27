@@ -86,6 +86,7 @@ public class DoubleKnives : Enemies
 
     private void Update()
     {
+        base.Update();
         if (!inCombat) return;
         
         

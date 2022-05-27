@@ -55,6 +55,11 @@ public abstract class Enemies : Subject
         Debug.Log("加载");
     }
 
+    protected void Update()
+    {
+        if(healthValue<0) ObjectPool.Instance.PushObject(gameObject);
+    }
+
     /// <summary>
     /// 判断玩家是否处于警戒区域内
     /// </summary>
