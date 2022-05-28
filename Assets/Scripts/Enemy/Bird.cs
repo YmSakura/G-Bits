@@ -125,6 +125,8 @@ public class Bird : Enemies
                     Physics2D.OverlapCollider(beakCheck, VisibleFilter2D, collider2Ds) != 0)
                 {
                     Debug.Log("区域内有障碍物");
+                    InSkill = false;
+                    Attackable = true;
                     return;
                 }
                 beakObj.SetActive(true);
