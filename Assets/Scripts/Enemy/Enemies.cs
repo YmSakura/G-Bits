@@ -3,8 +3,9 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
+using Object = System.Object;
 
-public class Enemies : Subject
+public abstract class Enemies : Subject
 {
     [Header("基本属性")] 
     public float healthValue;       //生命值
@@ -13,6 +14,8 @@ public class Enemies : Subject
     public float alertValue;        //警戒值
     public Vector2 position;        //自身坐标
     public Vector2 direction;       //自身朝向
+    protected int StateLevel = 1;
+    protected bool Interruptible=true;
     
     [Header("技能属性")]
     protected bool InSkill = false;
@@ -24,21 +27,23 @@ public class Enemies : Subject
     [SerializeField]private Transform alertAreaPointB;      //矩形警戒区域对角线另一段
     //[SerializeField]private Transform alertAreaPointC;      //矩形仇恨区域对角线另一段
     [SerializeField]protected Transform playerTrans;          //玩家坐标
-    [SerializeField] private GameObject BackAttackArea;
-    [SerializeField]private LayerMask playerMask;       //Player层包括玩家(所有可以被看见的)(用于判断)
-    [SerializeField]private LayerMask visibleMask;      //Visible层包括墙体(所有可以被看见的,会被阻挡视线的)(用于判断)
+    [SerializeField]private GameObject backAttackArea;
+    [SerializeField]protected LayerMask playerMask;       //Player层包括玩家(所有可以被看见的)(用于判断)
+    [SerializeField]protected LayerMask visibleMask;      //Visible层包括墙体(所有可以被看见的,会被阻挡视线的)(用于判断)
     [SerializeField]private LayerMask enemyMask;        //Enemy层包括所有敌人(用于范围唤醒敌人进入战斗状态)
     protected ContactFilter2D PlayerFilter2D;             //用于筛选出Player层的对象
     private ContactFilter2D enemyFilter2D;              //用于筛选出Enemy层的对象
     protected readonly Collider2D[] PlayerColl = new Collider2D[1];          //overlap获取到的玩家碰撞体
     private readonly Collider2D[] _enemyColls = new Collider2D[8];      //overlap获取到的周边敌方目标碰撞体
-    
-    [SerializeField] private Slider alertBar;
-    [SerializeField] private Image alertFill;
+
+    [SerializeField] private GameObject alertBarPrefab;
+    private GameObject alertSlider;
+    private Slider alertBar;
+    private Image alertFill;
     protected float Distance;
 
 
-    //private float alertMuliplier = 10f;
+    //private float alertMultiplier = 10f;
 
     protected void BaseInit()
     {
@@ -48,6 +53,11 @@ public class Enemies : Subject
         enemyFilter2D.useLayerMask = true;
         gameObject.GetComponent<Attacked>().OnGetHit += GetHit;
         Debug.Log("加载");
+    }
+
+    protected void Update()
+    {
+        if(healthValue<0) ObjectPool.Instance.PushObject(gameObject);
     }
 
     /// <summary>
@@ -98,6 +108,7 @@ public class Enemies : Subject
                 return;
             }
             Distance = AlertCheck();                                                //战斗中但是不在警戒区域内是否需要检测
+            Debug.Log("检测距离");
             if (Distance >= 0 && !inCombat)         //敌方目标还不在战斗状态中并且看到了玩家则警戒值上升
             {
 
@@ -106,6 +117,8 @@ public class Enemies : Subject
                 else //警戒值大于100则进入战斗状态
                 {
                     inCombat = true;
+                    Debug.Log("进入战斗");
+                    PushSlider();
                     GroupEnmity();
                 }
             }
@@ -122,12 +135,12 @@ public class Enemies : Subject
                 alertValue -= 2;
         }
         
-        if (alertValue > 0 && !inCombat)            //如果不在战斗状态下警戒值改变,则显示警示条
-            alertBar.gameObject.SetActive(true);
-        else                                        //否则禁用警示条
-            alertBar.gameObject.SetActive(false);
+        if (alertValue > 0 && !inCombat && !alertSlider)            //如果不在战斗状态下警戒值改变,则显示警示条
+            GetSlider();
+        else if(alertValue<=0&& alertSlider)                                       //否则禁用警示条
+            PushSlider();
         
-        if (alertBar.enabled)
+        if (alertSlider)
         {
             alertBar.value = alertValue;
             alertFill.color = new Color(alertBar.value / 100, 0, 0, 1);
@@ -136,10 +149,14 @@ public class Enemies : Subject
         if (alertValue < 0.1 && inCombat) //如果警戒值归0则从战斗状态中退出
         {
             inCombat = false;
-            BackAttackArea.SetActive(true);
+            backAttackArea.SetActive(true);
         }
     }
-    
+
+    protected int GetDistance()
+    {
+        return (int)(playerTrans.position - transform.position).sqrMagnitude;
+    }
     
     /// <summary>
     /// 当有一敌方目标发现玩家进入战斗状态，会调用此函数让附近区域内的敌方目标一同进入战斗状态
@@ -151,8 +168,13 @@ public class Enemies : Subject
         Physics2D.OverlapCircle(position, 5f,enemyFilter2D,_enemyColls);   //画一个圆获取
         foreach (var coll in _enemyColls)
         {
-            if(coll!=null)
+            if (coll != null)
+            {
                 coll.gameObject.GetComponent<Enemies>().inCombat = true;
+                coll.gameObject.GetComponent<Enemies>().alertValue = 100;
+            }
+            
+                
         }
     }
 
@@ -164,19 +186,54 @@ public class Enemies : Subject
     protected IEnumerator ResetAttackCd(float attackCd)
     {
         Debug.Log("重置状态");
+        StateLevel = 0;
         InSkill = false;
-        Movable = true;                                //可以继续移动
+        Movable = true;                                 //可以继续移动
         yield return new WaitForSeconds(attackCd);      //等待攻击CD
         Attackable = true;                              //CD过后重新可以继续攻击
         Debug.Log("重置结束");
     }
     
-    protected void GetHit(Vector2 position, Vector2 force,int damage)
+    protected void GetHit(Vector2 position, Vector2 force,int damage,int priorityLevel)
     {
         healthValue-= damage;
         inCombat = true;
         alertValue = 100;
+        if (priorityLevel>StateLevel&&Interruptible)
+        {
+            GetInterrupted();
+        }
     }
-    
+
+    protected abstract void GetInterrupted();
+
+    protected void RecoverFromHurt()
+    {
+        InSkill = false;
+        Movable = true;                                 //可以继续移动
+        Attackable = true;                              //CD过后重新可以继续攻击
+        StateLevel = 0;
+    }
+    private void GetSlider()
+    {
+        alertSlider =ObjectPool.Instance.GetUI(alertBarPrefab);
+        alertSlider.transform.localScale=Vector3.one;
+        alertSlider.transform.position=Camera.main.WorldToScreenPoint(playerTrans.position); 
+        alertBar = alertSlider.GetComponent<Slider>();
+        alertFill = alertSlider.transform.GetChild(1).GetComponentInChildren<Image>();
+    }
+
+    private void PushSlider()
+    {
+        ObjectPool.Instance.PushObject(alertSlider);
+        alertSlider = null;
+        alertBar = null;
+        alertFill = null;
+    }
+    private void OnCollisionEnter2D(Collision2D col)
+    {
+        inCombat = true;
+        alertValue = 100;
+    }
 }
 

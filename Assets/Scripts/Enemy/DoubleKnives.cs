@@ -36,9 +36,9 @@ public class DoubleKnives : Enemies
     [Header("常量")]
     //private const float WalkingSpeed = 0.21f;             //移动速度
     private const float SprintSpeed = 5f;           //冲刺速度
-    private const float DaggerSpeed = 16;           //匕首飞行速度
+    private const float DaggerSpeed = 20;           //匕首飞行速度
     private const float DaggerInterval = 0.2f;           //匕首间隔
-    private const float DaggerFlyTime = 0.15f;       //匕首飞行时间
+    private const float DaggerFlyTime = 0.2f;       //匕首飞行时间
     private const float AttackCd = 1f;              //攻击间隙
     private const float ScaleMultiplier = 0.1f;    //缩放比例
     private static readonly int IsWalking = Animator.StringToHash("isWalking");
@@ -64,6 +64,7 @@ public class DoubleKnives : Enemies
     private void OnEnable()
     {
         healthValue = 100;
+        SetPatrolPoint();
     }
 
     private void FixedUpdate()
@@ -75,13 +76,19 @@ public class DoubleKnives : Enemies
         if(!inCombat)
         {
             Patrol();
+            
+        }
+        else
+        {
+            InCombat();
         }
     }
 
     private void Update()
     {
+        base.Update();
         if (!inCombat) return;
-        InCombat();
+        
         
     }
 
@@ -122,14 +129,7 @@ public class DoubleKnives : Enemies
             transform.localScale = new Vector3(faceDirection,1,1)*ScaleMultiplier;
         }
 
-        rb.velocity = faceDirection switch
-        {
-            //面向左边在左点右方向左走
-            1 when selfX > xL => Vector2.left * WalkingSpeed,
-            //面向右边在右点左方向左走
-            -1 when selfX < xR => Vector2.right * WalkingSpeed,
-            _ => rb.velocity
-        };
+        rb.velocity = Vector2.left*faceDirection*WalkingSpeed;
     }
 
     #region Combat
@@ -161,22 +161,24 @@ public class DoubleKnives : Enemies
 
     private void SkillChoose()
     {
+        var dis = GetDistance();
+        Debug.Log("Distance"+dis);
         int rand = Random.Range(1, 11);
-        if (Distance > 6)
+        if (dis > 6*6)
         {
             if (rand<8) 
                 skill = Skill.SSprintAttack;
             else 
                 Attackable = false;
         }
-        else if(Distance>3)
+        else if(dis>3*3)
         {
             Attackable = true;
             skill = rand < 4 ? Skill.SSprintAttack : Skill.SDaggerThrow;
         }
         else
         {
-            skill = rand < 4 ? Skill.SDaggerThrow : Skill.SSlashAttack;
+            skill = rand < 8 ? Skill.SDaggerThrow : Skill.SSlashAttack;
         }
         SkillBegin(skill);
     }
@@ -191,16 +193,19 @@ public class DoubleKnives : Enemies
             case Skill.SSprintAttack:
                 rb.velocity=Vector2.zero;
                 Movable = false;
+                StateLevel = 2;
                 anim.Play("charge");
                 break;
             case Skill.SDaggerThrow:
                 if(CdReset!=null)
                     StopCoroutine(CdReset);
+                StateLevel = 1;
                 anim.Play("throw_charge");
                 break;
             case Skill.SSlashAttack:
                 rb.velocity=Vector2.zero;
                 Movable = false;
+                StateLevel = 1;
                 anim.Play("attack_near");
                 break;
         }
@@ -218,9 +223,16 @@ public class DoubleKnives : Enemies
             case Skill.SSlashAttack:
                 break;
         }
-        Movable = true;
         CdReset=StartCoroutine(ResetAttackCd(AttackCd));
         Debug.Log("技能结束");
+    }
+
+    protected override void GetInterrupted()
+    {
+        StateLevel = 10;
+        anim.Play("being_attacked");
+        
+        
     }
 
     #endregion

@@ -14,7 +14,7 @@ public class TestP : MonoBehaviour
         gameObject.GetComponent<Attacked>().OnGetHit += GetHit;
     }
 
-    protected void GetHit(Vector2 position, Vector2 force,int damage)
+    protected void GetHit(Vector2 position, Vector2 force,int damage,int priorityLevel)
     {
         Debug.Log("玩家受到"+damage+"伤害");
     }
