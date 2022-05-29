@@ -13,6 +13,14 @@ public class AttackCommand : ICommand
     }
 }
 
+public class UpAttackCommand : ICommand
+{
+    public void Execute(GameActor gameActor)
+    {
+        gameActor.UpAttack();
+    }
+}
+
 public class SwitchWeaponCommand : ICommand
 {
     public void Execute(GameActor gameActor)
@@ -36,3 +44,5 @@ public class SprintCommand : ICommand
         gameActor.Sprint();
     }
 }
+
+

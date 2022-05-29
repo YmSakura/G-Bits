@@ -33,7 +33,7 @@ public class SpellMinion : Enemies
     private const float BloodSpearScale = 0.2f;
     private const float BloodSpearSpeed = 30f;
     private const int BloodSpearDamage = 10;
-    private const float ScaleMultiplier = 0.1f;
+    private const float ScaleMultiplier = 0.5f;
     private const float StickForce = 50;
     private const float BloodSpearTime = 0.2f;
 

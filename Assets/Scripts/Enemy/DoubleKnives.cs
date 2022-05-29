@@ -40,7 +40,7 @@ public class DoubleKnives : Enemies
     private const float DaggerInterval = 0.2f;           //匕首间隔
     private const float DaggerFlyTime = 0.2f;       //匕首飞行时间
     private const float AttackCd = 1f;              //攻击间隙
-    private const float ScaleMultiplier = 0.1f;    //缩放比例
+    private const float ScaleMultiplier = 0.5f;    //缩放比例
     private static readonly int IsWalking = Animator.StringToHash("isWalking");
 
     private enum Skill
