@@ -15,8 +15,8 @@ public class DoubleKnives : Enemies
     [Header("基本属性")] 
     private int faceDirection = 1;
 
-    [Range(0,5)]
-    public float WalkingSpeed = 0.21f;
+    [Range(0,10)]
+    public float WalkingSpeed = 5f;
     
     [Header("组件")]
     [SerializeField] private Rigidbody2D rb;
@@ -35,10 +35,10 @@ public class DoubleKnives : Enemies
 
     [Header("常量")]
     //private const float WalkingSpeed = 0.21f;             //移动速度
-    private const float SprintSpeed = 5f;           //冲刺速度
-    private const float DaggerSpeed = 20;           //匕首飞行速度
+    private const float SprintSpeed = 30f;           //冲刺速度
+    private const float DaggerSpeed = 40;           //匕首飞行速度
     private const float DaggerInterval = 0.2f;           //匕首间隔
-    private const float DaggerFlyTime = 0.2f;       //匕首飞行时间
+    private const float DaggerFlyTime = 0.4f;       //匕首飞行时间
     private const float AttackCd = 1f;              //攻击间隙
     private const float ScaleMultiplier = 0.5f;    //缩放比例
     private static readonly int IsWalking = Animator.StringToHash("isWalking");
@@ -108,8 +108,9 @@ public class DoubleKnives : Enemies
     public void SetPatrolPoint()
     {
         var pos = transform.position;
-        var offset = new Vector3(5, 0);
+        var offset = new Vector3(15, 0);
         patrolAreaPointL = pos - offset;
+        patrolAreaPointR = pos + offset;
     }
     public void SetPatrolPoint(float left,float right)
     {
@@ -164,14 +165,14 @@ public class DoubleKnives : Enemies
         var dis = GetDistance();
         Debug.Log("Distance"+dis);
         int rand = Random.Range(1, 11);
-        if (dis > 6*6)
+        if (dis > 30*30)
         {
             if (rand<8) 
                 skill = Skill.SSprintAttack;
             else 
                 Attackable = false;
         }
-        else if(dis>3*3)
+        else if(dis>3*3*25)
         {
             Attackable = true;
             skill = rand < 4 ? Skill.SSprintAttack : Skill.SDaggerThrow;
@@ -244,7 +245,7 @@ public class DoubleKnives : Enemies
     /// </summary>
     private void ChargeOver()
     {
-        rb.velocity = new Vector2(direction.x*SprintSpeed, 0);//给与当前朝向的速度
+        rb.velocity = new Vector2(-transform.localScale.x*SprintSpeed, 0);//给与当前朝向的速度
     }
     
     #endregion
@@ -276,7 +277,7 @@ public class DoubleKnives : Enemies
         daggers[index]=ObjectPool.Instance.GetObject(daggerPrefab); //从池中取出匕首实例
         daggers[index].transform.position = pos;     //将匕首坐标调整至自身坐标
         daggers[index].GetComponent<SpriteRenderer>().color=Color.white;
-        daggers[index].transform.localScale = new Vector3(-faceDirection*0.4f, 0.4f, 1);
+        daggers[index].transform.localScale = new Vector3(-faceDirection*1f, 1f, 1);
         daggers[index].GetComponent<Rigidbody2D>().velocity=new Vector2(faceDirection*-1,0)*DaggerSpeed;//给与匕首均匀速度
 
         yield return new WaitForSeconds(DaggerFlyTime);//匕首飞行

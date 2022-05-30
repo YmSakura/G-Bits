@@ -79,9 +79,9 @@ public abstract class Enemies : Subject
     private int AlertCheck()
     {
         position = transform.position;                              //确定自身坐标
-        direction = (Vector2)playerTrans.position - position;              //计算看向玩家的方向
+        direction = (Vector2)playerTrans.position+Vector2.up*5 - position;              //计算看向玩家的方向
         Debug.DrawRay(position,direction,Color.red,0.5f);
-        RaycastHit2D hit = Physics2D.Raycast(position,direction,12f, visibleMask+playerMask);     //射线射向玩家
+        RaycastHit2D hit = Physics2D.Raycast(position,direction,50f, visibleMask+playerMask);     //射线射向玩家
         if (hit.collider != null&&hit.collider.CompareTag("Player"))//如果射线目标为玩家，意味着敌方目标可以看见玩家
         {
             var distance = (int)Mathf.Abs(hit.point.x - position.x);
@@ -234,6 +234,7 @@ public abstract class Enemies : Subject
     {
         inCombat = true;
         alertValue = 100;
+        PushSlider();
     }
 }
 

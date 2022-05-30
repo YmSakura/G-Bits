@@ -27,15 +27,15 @@ public class SpellMinion : Enemies
 
     [Header("常量")] 
     private const float AttackCd = 1.5f;
-    private const float BloodBallScale = 0.2f;
-    private const float BloodBallSpeed = 10f;
+    private const float BloodBallScale = 1f;
+    private const float BloodBallSpeed = 20f;
     private const int BloodBallDamage = 10;
-    private const float BloodSpearScale = 0.2f;
-    private const float BloodSpearSpeed = 30f;
+    private const float BloodSpearScale = 1f;
+    private const float BloodSpearSpeed = 40f;
     private const int BloodSpearDamage = 10;
     private const float ScaleMultiplier = 0.5f;
     private const float StickForce = 50;
-    private const float BloodSpearTime = 0.2f;
+    private const float BloodSpearTime = 0.6f;
 
     private enum Skill
     {
@@ -113,17 +113,17 @@ public class SpellMinion : Enemies
     private void KeepAway()
     {
         var dis = GetDistance();
-        if (dis < 3*3)
+        if (dis < 3*3*25)
         {
             rb.velocity = new Vector2(faceDirection * -moveSpeed, 0);
             anim.SetBool(IsWalking, true);
         }
-        else if (dis>6*6&&dis<9*9)
+        else if (dis>6*6*25&&dis<9*9*25)
         {
             rb.velocity=Vector2.zero;
             anim.SetBool(IsWalking, false);
         }
-        else if(dis>8*8)
+        else if(dis>8*8*25)
         {
             rb.velocity = new Vector2(faceDirection * moveSpeed, 0);
             anim.SetBool(IsWalking, true);
@@ -137,7 +137,7 @@ public class SpellMinion : Enemies
     {
         Skill skill;
         int rand = Random.Range(1, 11);
-        if(Distance<2)
+        if(GetDistance()<4*25)
         {
             if (rand<=6) skill = Skill.SStickAttack;
             else if (rand < 9) skill = Skill.SBloodBall;
@@ -210,21 +210,21 @@ public class SpellMinion : Enemies
         
         Transform trans = BloodBall[index].transform;
 
-        trans.position = position;
+        trans.position = transform.position;
         trans.localScale = new Vector3(faceDirection*BloodBallScale,BloodBallScale,1);
 
         float timer = 0;
         do
         {
             if (!BloodBall[index]) yield break;
-            var angle = Vector2.Angle(Vector2.zero, playerTrans.position-transform.position);
+            var angle = Vector2.Angle(Vector2.zero, playerTrans.position+Vector3.up*5-transform.position);
             trans.rotation = new Quaternion(0, 0, angle, 0);
             timer += Time.fixedDeltaTime;
             yield return new WaitForFixedUpdate();
         } while (timer<0.3f);
         
         if(BloodBall[index].GetComponent<SpriteRenderer>().color.a<1)yield break;
-        Vector2 dir = playerTrans.position-transform.position;
+        Vector2 dir = playerTrans.position+Vector3.up*5-transform.position;
         BloodBall[index].GetComponent<Rigidbody2D>().velocity=BloodBallSpeed * (dir/dir.magnitude);
         
         yield return new WaitForSeconds(2f);
@@ -279,8 +279,8 @@ public class SpellMinion : Enemies
     {
         Collider2D[] player=new Collider2D[1];
         Vector2 center = transform.position;
-        Vector2 left = center + new Vector2(-2, -1);
-        Vector2 right = center + new Vector2(2, 0);
+        Vector2 left = center + new Vector2(-10, -2);
+        Vector2 right = center + new Vector2(10, 0);
         Vector2 dir = new Vector2(center.x < playerTrans.position.x ? -1 : 1,0);
         Physics2D.OverlapArea(left, right, PlayerFilter2D, player);
         Debug.DrawLine(left,right,Color.white);
