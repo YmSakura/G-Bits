@@ -422,7 +422,7 @@ public class Player : GameActor
     public void AttackDone()
     {
         isAttack = false;
-        rb.gravityScale = 4;
+        rb.gravityScale = 20;
     }
 
     #region 蓄力
